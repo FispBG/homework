@@ -38,15 +38,11 @@ bool isIpAddress(const std::string &ip) {
             return false;
         }
 
-        try {
-            int32_t num = stoi(byte);
-            if (num < 0 || num > 255) {
-                return false;
-            }
-            count++;
-        }catch (...) {
+        int32_t num = stoi(byte);
+        if (num < 0 || num > 255) {
             return false;
         }
+        count++;
     }
 
     if (count!= 4) {
