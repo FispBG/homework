@@ -19,7 +19,7 @@ bool isInteger(const std::string &integer) {
             return false;
         }
         return true;
-    }catch (std::invalid_argument& e) {
+    }catch (...) {
         return false;
     }
 }
@@ -27,28 +27,33 @@ bool isInteger(const std::string &integer) {
 bool isIpAddress(const std::string &ip) {
     std::stringstream ss(ip);
     std::string byte;
-    std::vector<int16_t> ipBytes;
-    while (std::getline(ss, byte, '.')) {
-        if (isInteger(byte)) {
+    int count = 0;
 
-            int16_t num = stoi(byte);
-            if (num >= 0 && num <= 255) {
-                ipBytes.push_back(num);
-            }else {
+    if (ip.back() == '.') {
+        return false;
+    }
+
+    while (std::getline(ss, byte, '.')) {
+        if (!isInteger(byte)) {
+            return false;
+        }
+
+        try {
+            int32_t num = stoi(byte);
+            if (num < 0 || num > 255) {
                 return false;
             }
-
-        }else {
+            count++;
+        }catch (...) {
             return false;
         }
     }
 
-    if (ipBytes.size() != 4) {
+    if (count!= 4) {
         return false;
     }
 
     return true;
-
 }
 
 bool isPort(const std::string &port) {
@@ -65,14 +70,13 @@ Config createConfig(const int &argc, char *argv[]) {
     for (int i = 1; i < argc; i++) {
         std::string flag = argv[i];
         std::string argFlag;
-        std::cout << "flag: " << flag << std::endl;
 
         if (i+1 >= argc) {
-            std::cerr << "No argument for flag: " << argFlag << std::endl;
+            std::cerr << "No argument for flag: " << flag << std::endl;
             exit(-1);
         }
 
-        argFlag = argv[i+1];
+        argFlag = argv[++i];
 
         if (argFlag[0] == '-') {
             std::cerr << "Invalid arg flag: " << argFlag << std::endl;
@@ -83,7 +87,6 @@ Config createConfig(const int &argc, char *argv[]) {
 
             if (isIpAddress(argFlag)) {
                 config.address = argFlag;
-                i++;
             }else {
                 std::cerr << "Invalid address: " << argFlag << std::endl;
                 exit(-1);
@@ -93,31 +96,28 @@ Config createConfig(const int &argc, char *argv[]) {
 
             if (isInteger(argFlag) && isPort(argFlag)) {
                 config.port = stoi(argFlag);
-                i++;
+
             }else {
-                std::cerr << "Invalid port(0-65535): " << argv[i+1] << std::endl;
+                std::cerr << "Invalid port(0-65535): " << argFlag << std::endl;
                 exit(-1);
             }
 
         }else if (flag == "-r") {
 
             config.role = argFlag;
-            i++;
 
         }else if (flag == "-i") {
 
             if (isInteger(argFlag)) {
-                int32_t id = stoi(argFlag);
-                config.id = id;
-                i++;
+                config.id = stoi(argFlag);
+
             }else {
                 std::cerr << "Invalid id: " << argFlag << std::endl;
                 exit(-1);
             }
 
         }else if (flag == "-L") {
-            config.lib = std::string(argv[i+1]);
-            i++;
+            config.lib = argFlag;
 
         }else {
             std::cerr << "Invalid key: " << flag << std::endl;
@@ -137,32 +137,6 @@ void printMenu() {
 }
 
 int main(int argc, char** argv) {
-    // std::string address = "1.0.100.190";
-    // std::cout << stoi(address);
-    // int position = 0;
-    // int dotCount = 0;
-    // int indexDot = address.find('.', position);
-    //
-
-    // while (indexDot != -1) {
-    //     int oneByte = std::stoi(address.substr(position, indexDot - position));
-    //
-    //     if (!(oneByte >= 0 && oneByte <= 255)) {
-    //         std::cerr << "Invalid byte: " << oneByte << std::endl;
-    //         return -1;
-    //     }
-    //
-    //     position = indexDot + 1;
-    //     dotCount++;
-    //     indexDot = address.find('.', position);
-    //
-    // }
-    // int index = address.find(".", 6);
-    // std::cout << index << std::endl;
-    // for (int i =0; i < argc; i++) {
-    //     std::cout << argv[i] << std::endl;
-    // }
-
     Config config = createConfig(argc, argv);
 
     std::cout << config.address << std::endl;
@@ -170,7 +144,7 @@ int main(int argc, char** argv) {
     std::cout << config.role << std::endl;
     std::cout << config.id << std::endl;
     std::cout << config.lib << std::endl;
-    std::cout << std::stoi("55f5") << std::endl;
+
     std::string name = "Guest";
     std::string type;
 
