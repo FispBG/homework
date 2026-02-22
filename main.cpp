@@ -2,6 +2,8 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <cctype>
+#include <string>
 
 struct Config{
     std::string address;
@@ -54,42 +56,36 @@ bool isIpAddress(const std::string &ip) {
 
 bool isPort(const std::string &port) {
     uint32_t portValue = stoi(port);
+
     if (portValue <= 65535) {
         return true;
     }
     return false;
 }
 
-Config createConfig(const int &argc, char *argv[]) {
-    Config config;
+constexpr uint64_t hashString(const char* str) {
+    uint64_t hash = 0;
 
-    for (int i = 1; i < argc; i++) {
-        std::string flag = argv[i];
-        std::string argFlag;
+    while (*str) {
+        hash = hash * 31 + *str;
+        str++;
+    }
+    return hash;
+}
 
-        if (i+1 >= argc) {
-            std::cerr << "No argument for flag: " << flag << std::endl;
-            exit(-1);
-        }
+void processingFlag(const uint64_t flag, Config &config, const std::string& argFlag) {
+    switch (flag) {
 
-        argFlag = argv[++i];
-
-        if (argFlag[0] == '-') {
-            std::cerr << "Invalid arg flag: " << argFlag << std::endl;
-            exit(-1);
-        }
-
-        if (flag == "-a") {
-
+        case hashString("-a"):
             if (isIpAddress(argFlag)) {
                 config.address = argFlag;
             }else {
                 std::cerr << "Invalid address: " << argFlag << std::endl;
                 exit(-1);
             }
+            break;
 
-        }else if (flag == "-p") {
-
+        case hashString("-p"):
             if (isInteger(argFlag) && isPort(argFlag)) {
                 config.port = stoi(argFlag);
 
@@ -97,13 +93,13 @@ Config createConfig(const int &argc, char *argv[]) {
                 std::cerr << "Invalid port(0-65535): " << argFlag << std::endl;
                 exit(-1);
             }
+            break;
 
-        }else if (flag == "-r") {
-
+        case hashString("-r"):
             config.role = argFlag;
+            break;
 
-        }else if (flag == "-i") {
-
+        case hashString("-i"):
             if (isInteger(argFlag)) {
                 config.id = stoi(argFlag);
 
@@ -111,60 +107,94 @@ Config createConfig(const int &argc, char *argv[]) {
                 std::cerr << "Invalid id: " << argFlag << std::endl;
                 exit(-1);
             }
+            break;
 
-        }else if (flag == "-L") {
+        case hashString("-L"):
             config.lib = argFlag;
+            break;
 
-        }else {
+        default:
             std::cerr << "Invalid key: " << flag << std::endl;
             exit(-1);
+    }
+}
+
+Config createConfig(const int &argc, const char *argv[]) {
+    Config config;
+
+    for (int i = 1; i < argc; i++) {
+        const uint32_t flag = hashString(argv[i]);
+
+        if (i+1 >= argc) {
+            std::cerr << "No argument for flag: " << argv[i] << std::endl;
+            exit(-1);
         }
+
+        const std::string argFlag = argv[++i];
+
+        if (argFlag[0] == '-') {
+            std::cerr << "Invalid arg flag: " << argFlag << std::endl;
+            exit(-1);
+        }
+
+        processingFlag(flag, config, argFlag);
     }
 
     return config;
 }
 
-void printMenu() {
+std::string lowerString(std::string s) {
+    for (char &ch : s) {
+        ch = static_cast<char>(std::tolower(ch));
+    }
+
+    return s;
+}
+
+void printMenu(const std::string &name) {
     system("clear");
+    std::cout << "Hi, " << name << "." << std::endl;
+    std::cout << "-------------------" << std::endl;
     std::cout << "name - input name" << std::endl;
     std::cout << "type - input type vector" << std::endl;
     std::cout << "input - input vector value" << std::endl;
     std::cout << "exit - close program" << std::endl;
+    std::cout << "-------------------" << std::endl;
+    std::cout << "Command: ";
 }
 
-int main(int argc, char** argv) {
+int main(int argc, const char **argv) {
     Config config = createConfig(argc, argv);
-
-    std::cout << config.address << std::endl;
-    std::cout << config.port << std::endl;
-    std::cout << config.role << std::endl;
-    std::cout << config.id << std::endl;
-    std::cout << config.lib << std::endl;
 
     std::string name = "Guest";
     std::string type;
 
-    // while (true) {
-    //     printMenu();
-    //     std::string command;
-    //     std::cin >> command;
-    //
-    //     if (command == "name") {
-    //         system("clear");
-    //         std::cout << "Input name: ";
-    //         std::cin >> name;
-    //     }else if (command == "type") {
-    //         system("clear");
-    //         std::cout << "Input type: ";
-    //         std::cin >> type;
-    //
-    //         if (type == "int") {
-    //
-    //         }
-    //
-    //     }else if (command == "exit") {
-    //         return 0;
-    //     }
-    // }
-    return 0;
+    while (true) {
+        printMenu(name);
+        std::string command;
+        std::getline(std::cin, command);
+        uint64_t hashCommand = hashString(command.c_str());
+
+        switch (hashCommand) {
+            case hashString("name"):
+                system("clear");
+                std::cout << "Input name: ";
+                std::getline(std::cin, name);
+                break;
+
+            case hashString("type"):
+                system("clear");
+                std::cout << "Input type: ";
+                std::getline(std::cin, type);
+                break;
+
+            case hashString("input"):
+                break;
+
+            case hashString("exit"):
+                return 0;
+
+            default: ;
+        }
+    }
 }
