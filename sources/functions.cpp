@@ -1,23 +1,26 @@
-#include <cstdint>
-#include <iostream>
-#include <sstream>
-#include <vector>
-#include <cctype>
-#include <string>
-
-struct Config{
-    std::string address;
-    int32_t port = 0;
-    std::string role;
-    int32_t id = 0;
-    std::string lib;
-};
+//
+// Created by fisp on 23.02.2026.
+//
+#include "../includes/functions.h"
 
 bool isInteger(const std::string &integer) {
     size_t lastPosition;
     try {
         stoi(integer, &lastPosition);
         if (lastPosition != integer.length()) {
+            return false;
+        }
+        return true;
+    }catch (...) {
+        return false;
+    }
+}
+
+bool isFloat(const std::string &value) {
+    size_t lastPosition;
+    try {
+        stof(value, &lastPosition);
+        if (lastPosition != value.length()) {
             return false;
         }
         return true;
@@ -47,7 +50,7 @@ bool isIpAddress(const std::string &ip) {
         count++;
     }
 
-    if (count!= 4) {
+    if (count != 4) {
         return false;
     }
 
@@ -61,16 +64,6 @@ bool isPort(const std::string &port) {
         return true;
     }
     return false;
-}
-
-constexpr uint64_t hashString(const char* str) {
-    uint64_t hash = 0;
-
-    while (*str) {
-        hash = hash * 31 + *str;
-        str++;
-    }
-    return hash;
 }
 
 void processingFlag(const uint64_t flag, Config &config, const std::string& argFlag) {
@@ -123,7 +116,7 @@ Config createConfig(const int &argc, const char *argv[]) {
     Config config;
 
     for (int i = 1; i < argc; i++) {
-        const uint32_t flag = hashString(argv[i]);
+        const uint64_t flag = hashString(argv[i]);
 
         if (i+1 >= argc) {
             std::cerr << "No argument for flag: " << argv[i] << std::endl;
@@ -143,58 +136,75 @@ Config createConfig(const int &argc, const char *argv[]) {
     return config;
 }
 
-std::string lowerString(std::string s) {
-    for (char &ch : s) {
+std::string lowerString(std::string str) {
+    for (char &ch : str) {
         ch = static_cast<char>(std::tolower(ch));
     }
 
-    return s;
+    return str;
 }
 
-void printMenu(const std::string &name) {
-    system("clear");
-    std::cout << "Hi, " << name << "." << std::endl;
-    std::cout << "-------------------" << std::endl;
-    std::cout << "name - input name" << std::endl;
-    std::cout << "type - input type vector" << std::endl;
-    std::cout << "input - input vector value" << std::endl;
-    std::cout << "exit - close program" << std::endl;
-    std::cout << "-------------------" << std::endl;
-    std::cout << "Command: ";
-}
+bool fillVector(std::vector<std::string> &stringVec,
+    std::vector<int> &intVec,
+    std::vector<float> &floatVec,
+    const std::string &type,
+    const std::string &str,
+    const int &vecSize) {
 
-int main(int argc, const char **argv) {
-    Config config = createConfig(argc, argv);
+    std::vector<int> tempInt(vecSize);
+    std::vector<float> tempFloat(vecSize);
+    std::vector<std::string> tempString(vecSize);
 
-    std::string name = "Guest";
-    std::string type;
+    int count = 0;
 
-    while (true) {
-        printMenu(name);
-        std::string command;
-        std::getline(std::cin, command);
-        uint64_t hashCommand = hashString(command.c_str());
+    uint64_t hashType = hashString(type.c_str());
 
-        switch (hashCommand) {
-            case hashString("name"):
-                system("clear");
-                std::cout << "Input name: ";
-                std::getline(std::cin, name);
-                break;
-
-            case hashString("type"):
-                system("clear");
-                std::cout << "Input type: ";
-                std::getline(std::cin, type);
-                break;
-
-            case hashString("input"):
-                break;
-
-            case hashString("exit"):
-                return 0;
-
-            default: ;
+    std::istringstream ss(str);
+    std::string element;
+    while (getline(ss, element, ' ')) {
+        if (count == vecSize) {
+            break;
         }
+        switch (hashType) {
+            case hashString("int"):
+                if (!isInteger(element)) {
+                    return false;
+                }
+                tempInt[count] = stoi(element);
+                break;
+
+            case hashString("float"):
+                if (!isFloat(element)) {
+                    return false;
+                }
+                tempFloat[count] = stof(element);
+                break;
+
+            case hashString("string"):
+                tempString[count] = element;
+                break;
+
+            default:;
+        }
+        count++;
     }
+
+    if (count != vecSize) {
+        return false;
+    }
+
+    switch (hashType) {
+        case hashString("int"):
+            intVec = tempInt;
+            break;
+        case hashString("float"):
+            floatVec = tempFloat;
+            break;
+        case hashString("string"):
+            stringVec = tempString;
+            break;
+        default: ;
+    }
+
+    return true;
 }
