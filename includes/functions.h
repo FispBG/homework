@@ -1,6 +1,7 @@
 //
 // Created by fisp on 23.02.2026.
 //
+
 #include <cstdint>
 #include <iostream>
 #include <sstream>
@@ -17,9 +18,18 @@ struct Config{
     int32_t id = 0;
     std::string lib;
 };
+void processInputType(std::string &type);
+void processInputName(std::string &name);
+bool commandForUser(uint64_t hashCommand, std::string &name);
+bool commandForVector(const uint64_t &hashCommand, std::string &type,
+                    std::vector<std::string> &stringVec,
+                    std::vector<int> &intVec, std::vector<float> &floatVec,
+                    int size);
+void processInputVector(const std::string &type,
+                      std::vector<std::string> &stringVec,
+                      std::vector<int> &intVec,
+                      std::vector<float> &floatVec, int size);
 
-bool isInteger(const std::string &integer);
-bool isFloat(const std::string &value);
 bool isIpAddress(const std::string &ip);
 bool isPort(const std::string &port);
 
@@ -28,12 +38,12 @@ Config createConfig(const int &argc, const char *argv[]);
 
 std::string lowerString(std::string str);
 
-bool fillVector(std::vector<std::string> &stringVec,
+bool fillVectors(std::vector<std::string> &stringVec,
     std::vector<int> &intVec,
     std::vector<float> &floatVec,
     const std::string &type,
     const std::string &str,
-    const int &vecSize);
+    int vecSize);
 
 template <typename T>
 void printVector(const std::vector<T> &vec, const int &size, const std::string &type) {

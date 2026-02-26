@@ -3,32 +3,6 @@
 //
 #include "../includes/functions.h"
 
-bool isInteger(const std::string &integer) {
-    size_t lastPosition;
-    try {
-        stoi(integer, &lastPosition);
-        if (lastPosition != integer.length()) {
-            return false;
-        }
-        return true;
-    }catch (...) {
-        return false;
-    }
-}
-
-bool isFloat(const std::string &value) {
-    size_t lastPosition;
-    try {
-        stof(value, &lastPosition);
-        if (lastPosition != value.length()) {
-            return false;
-        }
-        return true;
-    }catch (...) {
-        return false;
-    }
-}
-
 bool isIpAddress(const std::string &ip) {
     std::stringstream ss(ip);
     std::string byte;
@@ -39,76 +13,138 @@ bool isIpAddress(const std::string &ip) {
     }
 
     while (std::getline(ss, byte, '.')) {
-        if (!isInteger(byte)) {
+
+        if (!std::isdigit(static_cast<unsigned char>(byte.front()))) {
             return false;
         }
 
-        int32_t num = stoi(byte);
+        if (byte.length() > 1 && byte.front() == '0') {
+            return false;
+        }
+
+        char* firstNotInt = nullptr;
+        const int64_t num = strtol(byte.c_str(), &firstNotInt, 10);
+
+        if (*firstNotInt != '\0') {
+            return false;
+        }
+
         if (num < 0 || num > 255) {
             return false;
         }
         count++;
     }
 
-    if (count != 4) {
-        return false;
-    }
-
-    return true;
+    return count == 4;
 }
 
 bool isPort(const std::string &port) {
-    uint32_t portValue = stoi(port);
+    if (port.empty()) {
+        return false;
+    }
 
-    if (portValue <= 65535) {
+    char* firstNotInt = nullptr;
+    const int64_t portValue = strtol(port.c_str(), &firstNotInt, 10);
+
+    if (*firstNotInt != '\0') {
+        return false;
+    }
+
+    if (portValue <= 65535 && portValue >= 0) {
         return true;
     }
     return false;
 }
 
-void processingFlag(const uint64_t flag, Config &config, const std::string& argFlag) {
-    switch (flag) {
+std::string lowerString(std::string str) {
+    for (char &ch : str) {
+        ch = static_cast<char>(std::tolower(ch));
+    }
 
+    return str;
+}
+
+void processOnlyIp(Config &config, const std::string &ip) {
+    if (isIpAddress(ip)) {
+        config.address = ip;
+    }else {
+        std::cerr << "Invalid address: " << ip << std::endl;
+        exit(-1);
+    }
+}
+
+void processOnlyPort(Config &config, const std::string &port) {
+    if (isPort(port)) {
+        config.port = strtol(port.c_str(), nullptr, 10);
+
+    }else {
+        std::cerr << "Invalid port(0-65535): " << port << std::endl;
+        exit(-1);
+    }
+}
+
+void processOnlyId(Config &config, const std::string &id) {
+    char* firstNotInt = nullptr;
+    const int valueId = strtol(id.c_str(), &firstNotInt, 10);
+
+    if (*firstNotInt != '\0') {
+        std::cerr << "Invalid id: " << id << std::endl;
+        exit(-1);
+    }
+
+    config.id = valueId;
+}
+
+bool processNetworkFlags(const uint64_t flag, Config &config, const std::string &argFlag) {
+    switch (flag) {
         case hashString("-a"):
-            if (isIpAddress(argFlag)) {
-                config.address = argFlag;
-            }else {
-                std::cerr << "Invalid address: " << argFlag << std::endl;
-                exit(-1);
-            }
-            break;
+            processOnlyIp(config, argFlag);
+            return true;
 
         case hashString("-p"):
-            if (isInteger(argFlag) && isPort(argFlag)) {
-                config.port = stoi(argFlag);
-
-            }else {
-                std::cerr << "Invalid port(0-65535): " << argFlag << std::endl;
-                exit(-1);
-            }
-            break;
-
-        case hashString("-r"):
-            config.role = argFlag;
-            break;
-
-        case hashString("-i"):
-            if (isInteger(argFlag)) {
-                config.id = stoi(argFlag);
-
-            }else {
-                std::cerr << "Invalid id: " << argFlag << std::endl;
-                exit(-1);
-            }
-            break;
-
-        case hashString("-L"):
-            config.lib = argFlag;
-            break;
+            processOnlyPort(config, argFlag);
+            return true;
 
         default:
-            std::cerr << "Invalid key: " << flag << std::endl;
-            exit(-1);
+            return false;
+    }
+}
+
+bool processUserFlags(const uint64_t flag, Config &config, const std::string &argFlag) {
+    switch (flag) {
+        case hashString("-r"):
+            config.role = argFlag;
+            return true;
+
+        case hashString("-i"):
+            processOnlyId(config, argFlag);
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool processAppFlags(const uint64_t flag, Config &config, const std::string &argFlag) {
+    switch (flag) {
+        case hashString("-L"):
+            config.lib = argFlag;
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+void processingFlag(const uint64_t flag, Config &config, const std::string& argFlag) {
+
+    bool resultProcessing = processNetworkFlags(flag, config, argFlag) ||
+                            processUserFlags(flag, config, argFlag) ||
+                            processAppFlags(flag, config, argFlag);
+
+    if (!resultProcessing) {
+        std::cerr << "Invalid key: " << flag << std::endl;
+        exit(-1);
     }
 }
 
@@ -136,75 +172,176 @@ Config createConfig(const int &argc, const char *argv[]) {
     return config;
 }
 
-std::string lowerString(std::string str) {
-    for (char &ch : str) {
-        ch = static_cast<char>(std::tolower(ch));
-    }
-
-    return str;
-}
-
-bool fillVector(std::vector<std::string> &stringVec,
-    std::vector<int> &intVec,
-    std::vector<float> &floatVec,
-    const std::string &type,
-    const std::string &str,
-    const int &vecSize) {
-
-    std::vector<int> tempInt(vecSize);
-    std::vector<float> tempFloat(vecSize);
-    std::vector<std::string> tempString(vecSize);
-
-    int count = 0;
-
-    uint64_t hashType = hashString(type.c_str());
+template<typename T, typename Transform>
+bool validateNumberString(const std::string &str, std::vector<T> &vecNumbers,
+    const int vecSize, Transform transform) {
 
     std::istringstream ss(str);
     std::string element;
-    while (getline(ss, element, ' ')) {
-        if (count == vecSize) {
-            break;
-        }
-        switch (hashType) {
-            case hashString("int"):
-                if (!isInteger(element)) {
-                    return false;
-                }
-                tempInt[count] = stoi(element);
-                break;
+    int count = 0;
 
-            case hashString("float"):
-                if (!isFloat(element)) {
-                    return false;
-                }
-                tempFloat[count] = stof(element);
-                break;
-
-            case hashString("string"):
-                tempString[count] = element;
-                break;
-
-            default:;
+    while (count < vecSize && getline(ss, element, ' ')) {
+        char* firstNotInt = nullptr;
+        vecNumbers[count] = transform(element.c_str(), &firstNotInt);
+        if (*firstNotInt != '\0') {
+            return false;
         }
         count++;
     }
 
-    if (count != vecSize) {
+    return count == vecSize;
+}
+
+bool validateString(const std::string &str, const int vecSize,
+    std::vector<std::string> &vecString) {
+
+    std::istringstream ss(str);
+    std::string element;
+    int count = 0;
+
+    while (count < vecSize && getline(ss, element, ' ')) {
+        vecString[count] = element;
+        count++;
+    }
+
+    return count == vecSize;
+}
+
+long stringToLongDec(const char* str, char** end) {
+    return std::strtol(str, end, 10);
+}
+
+bool fillIntVector(const std::string &str,
+    std::vector<int> &intVec, const int vecSize) {
+
+    std::vector<int> tempInt(vecSize);
+    if (!validateNumberString(str, tempInt, vecSize, stringToLongDec)) {
         return false;
     }
 
+    intVec = tempInt;
+    return true;
+}
+
+bool fillFloatVector(const std::string &str,
+    std::vector<float> &floatVec, const int vecSize) {
+
+    std::vector<float> tempFloat(vecSize);
+    if (!validateNumberString(str, tempFloat, vecSize, strtod)) {
+        return false;
+    }
+
+    floatVec = tempFloat;
+    return true;
+}
+
+bool fillStringVector(const std::string &str,
+    std::vector<std::string> &stringVec, const int vecSize) {
+
+    std::vector<std::string> tempString(vecSize);
+    if (!validateString(str, vecSize, tempString)) {
+        return false;
+    }
+
+    stringVec = tempString;
+    return true;
+}
+
+bool fillVectors(std::vector<std::string> &stringVec,
+    std::vector<int> &intVec,
+    std::vector<float> &floatVec,
+    const std::string &type,
+    const std::string &str,
+    int vecSize) {
+
+    const uint64_t hashType = hashString(type.c_str());
+
     switch (hashType) {
         case hashString("int"):
-            intVec = tempInt;
-            break;
+            return fillIntVector(str, intVec, vecSize);
+
         case hashString("float"):
-            floatVec = tempFloat;
-            break;
+            return fillFloatVector(str, floatVec, vecSize);
+
         case hashString("string"):
-            stringVec = tempString;
-            break;
-        default: ;
+            return fillStringVector(str, stringVec, vecSize);
+
+        default:;
     }
 
     return true;
+}
+
+void processInputType(std::string &type)  {
+
+    std::string inputStr;
+    std::cout << "Input type(int, float, string): ";
+    std::getline(std::cin, inputStr);
+
+    inputStr = lowerString(inputStr);
+    if (inputStr != "string" && inputStr != "int" && inputStr != "float") {
+        std::cout << "Invalid type: " << inputStr << std::endl;
+        std::cout << "Press enter: ";
+        getchar();
+        return;
+    }
+
+    type = inputStr;
+}
+
+void processInputVector(const std::string &type,
+                      std::vector<std::string> &stringVec,
+                      std::vector<int> &intVec,
+                      std::vector<float> &floatVec, const int size)  {
+
+    std::string inputStr;
+    std::cout << "Input " << type << " vector: ";
+    std::getline(std::cin, inputStr);
+
+    if (!fillVectors(stringVec, intVec, floatVec, type, inputStr, size)) {
+        std::cout << "Invalid input(type)" << std::endl;
+        std::cout << "Press enter: ";
+        getchar();
+    }
+}
+
+bool commandForVector(const uint64_t &hashCommand, std::string &type,
+                    std::vector<std::string> &stringVec,
+                    std::vector<int> &intVec, std::vector<float> &floatVec,
+                    const int size) {
+
+    switch (hashCommand) {
+
+        case hashString("type"):
+            system("clear");
+            processInputType(type);
+            return true;
+
+        case hashString("input"):
+            system("clear");
+            processInputVector(type, stringVec, intVec, floatVec, size);
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+void processInputName(std::string &name) {
+
+    std::cout << "Input name: ";
+    std::getline(std::cin, name);
+}
+
+bool commandForUser(const uint64_t hashCommand, std::string &name) {
+
+    switch (hashCommand) {
+        case hashString("name"):
+            system("clear");
+            processInputName(name);
+            return true;
+
+        default:
+            return false;
+    }
 }
