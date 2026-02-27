@@ -6,4 +6,6 @@ project(homework)
 add_executable(homework sources/main.cpp
         includes/functions.h
         sources/functions.cpp
+        tests/test_input.cpp
 )
+

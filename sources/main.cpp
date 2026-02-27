@@ -34,7 +34,11 @@ void printVariables(const std::vector<std::string> &stringVec,
 }
 
 int main(const int argc, const char **argv) {
-    Config config = createConfig(argc, argv);
+    Config config;
+    ResultStatus configCreate = createConfig(argc, argv, config);
+    if (configCreate.isError()) {
+        return -1;
+    }
 
     std::string name = "Guest";
     std::string type = "string";
@@ -50,7 +54,8 @@ int main(const int argc, const char **argv) {
 
         std::string command;
         std::getline(std::cin, command);
-        command = lowerString(command);
+
+        command = fixInputString(command);
         const uint64_t hashCommand = hashString(command.c_str());
 
         commandForVector(hashCommand, type, stringVec, intVec, floatVec, VEC_SIZE);
