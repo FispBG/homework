@@ -7,17 +7,8 @@
 
 #define VEC_SIZE 4
 
-// constexpr uint64_t hashString(const char* str) {
-//     uint64_t hash = 0;
-//
-//     while (*str) {
-//         hash = hash * 31 + static_cast<uint64_t>(*str);
-//         str++;
-//     }
-//     return hash;
-// }
-
 void printMenu(const std::string &name) {
+
     system("clear");
     std::cout << "Hi, " << name << "." << std::endl;
     std::cout << "-------------------" << std::endl;
@@ -28,8 +19,26 @@ void printMenu(const std::string &name) {
     std::cout << "-------------------" << std::endl;
 }
 
-int main(int argc, const char **argv) {
-    Config config = createConfig(argc, argv);
+void printVariables(const std::vector<std::string> &stringVec,
+    const std::vector<int> &intVec,
+    const std::vector<float> &floatVec,
+    const std::string &type) {
+
+    std::cout << "-------------------" << std::endl;
+    std::cout << "Your type: " << type << std::endl;
+    std::cout << "Your vectors" << std::endl;
+    printVector(stringVec, VEC_SIZE, "String");
+    printVector(intVec, VEC_SIZE, "Int");
+    printVector(floatVec, VEC_SIZE, "Float");
+    std::cout << "-------------------" << std::endl;
+}
+
+int main(const int argc, const char **argv) {
+    Config config;
+    ResultStatus configCreate = createConfig(argc, argv, config);
+    if (configCreate.isError()) {
+        return -1;
+    }
 
     std::string name = "Guest";
     std::string type = "string";
@@ -40,55 +49,19 @@ int main(int argc, const char **argv) {
 
     while (true) {
         printMenu(name);
-        std::cout << "Your type: " << type << std::endl;
-        std::cout << "Your vectors" << std::endl;
-        printVector(stringVec, VEC_SIZE, "String");
-        printVector(intVec, VEC_SIZE, "Int");
-        printVector(floatVec, VEC_SIZE, "Float");
-        std::cout << "-------------------" << std::endl;
+        printVariables(stringVec, intVec, floatVec, type);
         std::cout << "Command: ";
 
         std::string command;
         std::getline(std::cin, command);
-        command = lowerString(command);
+
+        command = fixInputString(command);
         const uint64_t hashCommand = hashString(command.c_str());
-        std::string inputStr;
+
+        commandForVector(hashCommand, type, stringVec, intVec, floatVec, VEC_SIZE);
+        commandForUser(hashCommand, name);
 
         switch (hashCommand) {
-            case hashString("name"):
-                system("clear");
-                std::cout << "Input name: ";
-                std::getline(std::cin, name);
-                break;
-
-            case hashString("type"):
-                system("clear");
-                std::cout << "Input type(int, float, string): ";
-                std::getline(std::cin, inputStr);
-
-                inputStr = lowerString(inputStr);
-                if (inputStr != "string" && inputStr != "int" && inputStr != "float") {
-                    std::cout << "Invalid type: " << inputStr << std::endl;
-                    std::cout << "Press enter: ";
-                    getchar();
-                }else {
-                    type = inputStr;
-                }
-
-                break;
-
-            case hashString("input"):
-                system("clear");
-                std::cout << "Input " << type << " vector: ";
-                std::getline(std::cin, inputStr);
-                if (!fillVector(stringVec, intVec, floatVec, type, inputStr, VEC_SIZE)) {
-                    std::cout << "Invalid input(type)" << std::endl;
-                    std::cout << "Press enter: ";
-                    getchar();
-                }
-
-                break;
-
             case hashString("exit"):
                 return 0;
 
