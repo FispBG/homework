@@ -6,5 +6,13 @@ project(homework)
 add_executable(${PROJECT_NAME} sources/main.cpp
         includes/functions.h
         sources/functions.cpp
+        includes/AppSettings.h
+        sources/AppSettings.cpp
+        includes/DataPool.h
+        sources/DataPool.cpp
+        sources/Menu.cpp
+        includes/Menu.h
+        includes/Tests.h
+        sources/Tests.cpp
 )
 include(cmake/cppcheck.cmake)

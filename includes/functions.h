@@ -2,16 +2,16 @@
 // Created by fisp on 23.02.2026.
 //
 
-#include <cstdint>
-#include <iostream>
-#include <sstream>
-#include <vector>
-#include <string>
-#include <chrono>
-#include <thread>
 
 #ifndef HOMEWORK_FUNCTIONS_H
 #define HOMEWORK_FUNCTIONS_H
+
+#include <cstdint>
+#include <iostream>
+#include <vector>
+#include <string>
+#include <thread>
+
 enum Status {
     Good_Stat,
     Error_Stat,
@@ -33,31 +33,17 @@ struct ResultStatus {
     bool isGood() const;
 };
 
-struct Config{
-    std::string address;
-    int32_t port = -1;
-    std::string role = "Client";
-    int32_t id = -1;
-    std::string lib;
-};
 void processInputType(std::string &type);
-void processInputName(std::string &name);
-bool commandForUser(uint64_t hashCommand, std::string &name);
-bool commandForVector(const uint64_t &hashCommand, std::string &type,
-                    std::vector<std::string> &stringVec,
-                    std::vector<int> &intVec, std::vector<float> &floatVec,
-                    int size);
-void processInputVector(const std::string &type,
+ResultStatus processInputName(std::string &name);
+
+ResultStatus processInputVector(const std::string &type,
                       std::vector<std::string> &stringVec,
                       std::vector<int> &intVec,
                       std::vector<float> &floatVec, int size);
 
 bool isIpAddress(const std::string &ip);
 bool isPort(const std::string &port);
-
-ResultStatus processingFlag(uint64_t hashFlag, const std::string &flag,
-    Config &config, const std::string& argFlag);
-ResultStatus createConfig(const int &argc, const char *argv[], Config &config);
+void logger(const ResultStatus &result);
 
 std::string fixInputString(const std::string &str);
 
