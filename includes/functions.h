@@ -33,13 +33,6 @@ struct ResultStatus {
     bool isGood() const;
 };
 
-struct Config{
-    std::string address;
-    int32_t port = -1;
-    std::string role = "Client";
-    int32_t id = -1;
-    std::string lib;
-};
 void processInputType(std::string &type);
 void processInputName(std::string &name);
 bool commandForUser(uint64_t hashCommand, std::string &name);
@@ -54,10 +47,7 @@ void processInputVector(const std::string &type,
 
 bool isIpAddress(const std::string &ip);
 bool isPort(const std::string &port);
-
-ResultStatus processingFlag(uint64_t hashFlag, const std::string &flag,
-    Config &config, const std::string& argFlag);
-ResultStatus createConfig(const int &argc, const char *argv[], Config &config);
+void logger(const ResultStatus &result);
 
 std::string fixInputString(const std::string &str);
 

@@ -40,7 +40,6 @@ int main(const int argc, const char **argv) {
         return -1;
     }
 
-    std::string name = "Guest";
     std::string type = "string";
 
     std::vector<std::string> stringVec(VEC_SIZE);
