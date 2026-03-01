@@ -16,6 +16,7 @@ public:
     virtual ~MenuItem() = default;
 };
 
+// Инвариант - appSettings — валидная ссылка на объект
 class CommandName : public MenuItem {
     AppSettings &appSettings;
 
@@ -25,6 +26,7 @@ public:
     void action() override;
 };
 
+// Инвариант - typeNow один из: int, float, string
 class CommandType : public MenuItem {
     std::string &typeNow;
 
@@ -33,6 +35,8 @@ public:
     void action() override;
 };
 
+// Инвариант - pool — валидная ссылка на объект
+// size > 0, иначе не смысла от объекта
 class CommandVectorInput : public MenuItem {
     DataPool &pool;
     std::string &type;
@@ -44,6 +48,7 @@ public:
     void action() override;
 };
 
+// Инвариант - appSettings — валидная ссылка на объект
 class CommandTest : public MenuItem {
     AppSettings &appSettings;
 
@@ -58,6 +63,8 @@ public:
     void action() override;
 };
 
+// Инвариант - pool — валидная ссылка на объект
+// vecSize > 0, иначе не смысла от объекта
 class CommandShow : public MenuItem {
     DataPool &pool;
     std::string &type;
@@ -70,6 +77,9 @@ public:
 
 };
 
+
+// Инвариант - уникальные ключи в items
+// Указатели в items не nullptr
 class Menu {
     std::unordered_map<uint64_t, std::unique_ptr<MenuItem>> items;
 

@@ -5,6 +5,7 @@
 #ifndef HOMEWORK_DATAPOOL_H
 #define HOMEWORK_DATAPOOL_H
 
+// Инвариант - type является одним из: int, float, string
 struct MyVec {
     std::string type;
     std::vector<std::string> stringVec;
@@ -12,6 +13,9 @@ struct MyVec {
     std::vector<float> floatVec;
 };
 
+// Инвариант - countElem всегда в диапазоне [0, N]
+// head и tail всегда в диапазоне [0, N-1]
+// v_arr указывает на массив размером N
 class DataPool {
     int N = 0;
     MyVec *v_arr = new MyVec[N];

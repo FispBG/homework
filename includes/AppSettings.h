@@ -7,6 +7,11 @@
 
 #include "./functions.h"
 
+// Инвариант - port находится в диапазоне [0, 65535]
+// address - ipv4
+// id > 0
+// lib только существующая
+// name не пустое
 class AppSettings {
     std::string address;
     int32_t port = -1;
