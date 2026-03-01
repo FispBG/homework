@@ -3,6 +3,8 @@
 //
 #include "../includes/AppSettings.h"
 
+#include <filesystem>
+
 void AppSettings::setName(const std::string &newName) {
     name = newName;
 }
@@ -94,12 +96,22 @@ bool AppSettings::processUserFlags(const uint64_t flag, const std::string &argFl
     }
 }
 
+ResultStatus AppSettings::processOnlyLib(std::string &lib, const std::string &argFlag) {
+    std::filesystem::path libPath = std::filesystem::path(argFlag);
+
+    if (std::filesystem::exists(libPath)) {
+        lib = libPath;
+        return ResultStatus::Good();
+    }
+
+    return ResultStatus::Error("Lib not exists: " + argFlag);
+}
+
 bool AppSettings::processAppFlags(const uint64_t flag, const std::string &argFlag, ResultStatus &res) {
 
     switch (flag) {
         case hashString("-L"):
-            lib = argFlag;
-            res = ResultStatus::Good();
+            res = processOnlyLib(lib, argFlag);
             return true;
 
         default:

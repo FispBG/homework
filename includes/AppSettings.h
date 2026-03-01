@@ -18,9 +18,12 @@ class AppSettings {
     ResultStatus processOnlyIp(const std::string &ip);
     ResultStatus processOnlyPort(const std::string &port);
     ResultStatus processOnlyId(const std::string &id);
+    ResultStatus processOnlyLib(std::string &lib, const std::string &argFlag);
+
     bool processNetworkFlags(uint64_t flag, const std::string &argFlag, ResultStatus &res);
     bool processUserFlags(uint64_t flag, const std::string &argFlag, ResultStatus &res);
     bool processAppFlags(uint64_t flag, const std::string &argFlag, ResultStatus &res);
+
     ResultStatus processingFlag(uint64_t hashFlag, const std::string &flag, const std::string& argFlag);
     ResultStatus checkNeedFlag() const;
 
@@ -34,6 +37,7 @@ class AppSettings {
     int32_t getPort() const;
     std::string getRole() const;
     uint64_t getId() const;
+
     std::string getLib() const;
     std::string getName() const;
 

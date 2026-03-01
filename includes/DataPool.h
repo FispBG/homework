@@ -5,9 +5,8 @@
 #ifndef HOMEWORK_DATAPOOL_H
 #define HOMEWORK_DATAPOOL_H
 
-#include "./functions.h"
-
 struct MyVec {
+    std::string type;
     std::vector<std::string> stringVec;
     std::vector<int> intVec;
     std::vector<float> floatVec;
@@ -24,8 +23,10 @@ class DataPool {
     explicit DataPool(const int size) : N(size) {};
     ~DataPool();
 
-    void insert(const MyVec &vec);
+    bool insert(const MyVec &vec);
     MyVec first();
+    MyVec last() const;
+    bool empty() const;
 };
 
 #endif //HOMEWORK_DATAPOOL_H

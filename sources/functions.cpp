@@ -3,8 +3,10 @@
 //
 #include "../includes/functions.h"
 
-#include <fstream>
+#include <sstream>
 #include <iomanip>
+#include <chrono>
+#include <fstream>
 
 ResultStatus ResultStatus::Good() {
     ResultStatus good = {Good_Stat, "", 0, ""};
@@ -265,7 +267,7 @@ void processInputType(std::string &type)  {
     type = inputStr;
 }
 
-void processInputVector(const std::string &type,
+ResultStatus processInputVector(const std::string &type,
                       std::vector<std::string> &stringVec,
                       std::vector<int> &intVec,
                       std::vector<float> &floatVec, const int size)  {
@@ -280,53 +282,24 @@ void processInputVector(const std::string &type,
         std::cout << "Press enter: ";
         getchar();
     }
+
+    return res;
 }
 
-bool commandForVector(const uint64_t &hashCommand, std::string &type,
-                    std::vector<std::string> &stringVec,
-                    std::vector<int> &intVec, std::vector<float> &floatVec,
-                    const int size) {
-
-    switch (hashCommand) {
-
-        case hashString("type"):
-            system("clear");
-            processInputType(type);
-            return true;
-
-        case hashString("input"):
-            system("clear");
-            processInputVector(type, stringVec, intVec, floatVec, size);
-            return true;
-
-        default:
-            return false;
-    }
-}
-
-void processInputName(std::string &name) {
+ResultStatus processInputName(std::string &name) {
 
     std::cout << "Input name: ";
     std::string inputStr;
     std::getline(std::cin, inputStr);
     if (inputStr.empty()) {
-        logger(ResultStatus::Error("Input empty name."));
+        ResultStatus res = ResultStatus::Error("Input empty name.");
+        logger(res);
         std::cout << "Press enter: ";
         getchar();
-    }else {
-        name = std::move(inputStr);
+        return res;
     }
+
+    name = std::move(inputStr);
+    return ResultStatus::Good();
 }
 
-bool commandForUser(const uint64_t hashCommand, std::string &name) {
-
-    switch (hashCommand) {
-        case hashString("name"):
-            system("clear");
-            processInputName(name);
-            return true;
-
-        default:
-            return false;
-    }
-}

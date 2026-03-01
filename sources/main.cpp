@@ -3,21 +3,12 @@
 #include <sstream>
 #include <vector>
 #include <string>
-#include "../includes/functions.h"
+
+#include "../includes/AppSettings.h"
+#include "../includes/DataPool.h"
+#include "../includes/Menu.h"
 
 #define VEC_SIZE 4
-
-void printMenu(const std::string &name) {
-
-    system("clear");
-    std::cout << "Hi, " << name << "." << std::endl;
-    std::cout << "-------------------" << std::endl;
-    std::cout << "name - input name" << std::endl;
-    std::cout << "type - input type vector" << std::endl;
-    std::cout << "input - input vector value" << std::endl;
-    std::cout << "exit - close program" << std::endl;
-    std::cout << "-------------------" << std::endl;
-}
 
 void printVariables(const std::vector<std::string> &stringVec,
     const std::vector<int> &intVec,
@@ -34,37 +25,34 @@ void printVariables(const std::vector<std::string> &stringVec,
 }
 
 int main(const int argc, const char **argv) {
-    Config config;
-    ResultStatus configCreate = createConfig(argc, argv, config);
+    AppSettings settings;
+    ResultStatus configCreate = settings.createConfig(argc, argv);
+
     if (configCreate.isError()) {
         return -1;
     }
 
+    DataPool pool(2);
+    Menu menu;
     std::string type = "string";
 
-    std::vector<std::string> stringVec(VEC_SIZE);
-    std::vector<int> intVec(VEC_SIZE);
-    std::vector<float> floatVec(VEC_SIZE);
+    menu.addItem("name", new CommandName(settings));
+    menu.addItem("input", new CommandVectorInput(pool, type, VEC_SIZE));
+    menu.addItem("type", new CommandType(type));
+    menu.addItem("test", new CommandTest(settings));
+    menu.addItem("show", new CommandShow(pool, type, VEC_SIZE));
+    menu.addItem("exit", new CommandExit());
 
     while (true) {
-        printMenu(name);
-        printVariables(stringVec, intVec, floatVec, type);
-        std::cout << "Command: ";
+        printMenu(settings.getName());
 
         std::string command;
         std::getline(std::cin, command);
 
         command = fixInputString(command);
-        const uint64_t hashCommand = hashString(command.c_str());
+        uint64_t hashCommand = hashString(command.c_str());
 
-        commandForVector(hashCommand, type, stringVec, intVec, floatVec, VEC_SIZE);
-        commandForUser(hashCommand, name);
-
-        switch (hashCommand) {
-            case hashString("exit"):
-                return 0;
-
-            default: ;
-        }
+        system("clear");
+        menu.findItem(hashCommand);
     }
 }

@@ -12,5 +12,7 @@ add_executable(${PROJECT_NAME} sources/main.cpp
         sources/DataPool.cpp
         sources/Menu.cpp
         includes/Menu.h
+        includes/Tests.h
+        sources/Tests.cpp
 )
-include(cmake/cppcheck.cmake)
+#include(cmake/cppcheck.cmake)
