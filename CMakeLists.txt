@@ -15,4 +15,4 @@ add_executable(${PROJECT_NAME} sources/main.cpp
         includes/Tests.h
         sources/Tests.cpp
 )
-#include(cmake/cppcheck.cmake)
+include(cmake/cppcheck.cmake)
