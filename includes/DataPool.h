@@ -5,6 +5,8 @@
 #ifndef HOMEWORK_DATAPOOL_H
 #define HOMEWORK_DATAPOOL_H
 
+#include "../includes/functions.h"
+
 // Инвариант - type является одним из: int, float, string
 struct MyVec {
     std::string type;

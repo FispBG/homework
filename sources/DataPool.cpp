@@ -2,7 +2,6 @@
 // Created by fisp on 01.03.2026.
 //
 #include "../includes/DataPool.h"
-#include "../includes/functions.h"
 
 DataPool::~DataPool() {
     delete[] v_arr;

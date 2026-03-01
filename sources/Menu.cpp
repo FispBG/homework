@@ -76,7 +76,7 @@ void CommandTest::action() {
     std::cout << "Connection test" << std::endl;
     size = takeSize();
 
-    std::cout << "Enter connection params(ip, port): ";
+    std::cout << "Enter connection params(ip or port): ";
     std::getline(std::cin, input);
     fillStringVector(input, params, size);
     vecTests.push_back(std::make_unique<ConnectionTest>(params));
