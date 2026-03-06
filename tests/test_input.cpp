@@ -42,11 +42,3 @@ TEST(FixStringTest, CheckDeleteNoKeyboardSimbol) {
     std::cout << fixString << std::endl;
     EXPECT_EQ(fixString, "help");
 }
-
-Test(TestMenuCommand, CheckIpCommand) {
-    IpAddress ipAddr;
-    CommandIpAddress ipCommand = CommandIpAddress(ipAddr);
-
-
-
-}
