@@ -4,6 +4,9 @@
 
 #include <gtest/gtest.h>
 #include "../includes/functions.h"
+#include "../includes/Tests.h"
+#include "../includes/Menu.h"
+#include "../includes/NetWork.h"
 
 TEST(InputVectorTest, CheckNoNumberInString) {
     std::vector<int> vecInt(4);
@@ -38,4 +41,12 @@ TEST(FixStringTest, CheckDeleteNoKeyboardSimbol) {
     std::string fixString = fixInputString(str1);
     std::cout << fixString << std::endl;
     EXPECT_EQ(fixString, "help");
+}
+
+Test(TestMenuCommand, CheckIpCommand) {
+    IpAddress ipAddr;
+    CommandIpAddress ipCommand = CommandIpAddress(ipAddr);
+
+
+
 }
