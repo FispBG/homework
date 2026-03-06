@@ -12,14 +12,15 @@
 #include <string>
 #include <thread>
 
-enum Status {
-    Good_Stat,
-    Error_Stat,
-    Warning_Stat,
+enum class Status {
+    Good,
+    Error,
+    Warning,
+    None
 };
 
 struct ResultStatus {
-    Status condition;
+    Status condition = Status::None;
     std::string message;
     int line = 0;
     const char* file = "";
@@ -31,6 +32,7 @@ struct ResultStatus {
     bool isWarning() const;
     bool isError() const;
     bool isGood() const;
+    bool isNone() const;
 };
 
 void processInputType(std::string &type);
@@ -39,29 +41,34 @@ ResultStatus processInputName(std::string &name);
 ResultStatus processInputVector(const std::string &type,
                       std::vector<std::string> &stringVec,
                       std::vector<int> &intVec,
-                      std::vector<float> &floatVec, int size);
+                      std::vector<float> &floatVec, uint64_t size);
 
 bool isIpAddress(const std::string &ip);
 bool isPort(const std::string &port);
 void logger(const ResultStatus &result);
 
 std::string fixInputString(const std::string &str);
+std::string stringStrip(const std::string &str);
+bool hexStringIsIp(const std::string &str);
+uint32_t hexStringToUint32_t(const std::string &str);
 
 ResultStatus fillVectors(std::vector<std::string> &stringVec,
     std::vector<int> &intVec,
     std::vector<float> &floatVec,
     const std::string &type,
     const std::string &str,
-    int vecSize);
+    uint64_t vecSize);
 
 ResultStatus fillIntVector(const std::string &str,
-    std::vector<int> &intVec, int vecSize);
+    std::vector<int> &intVec, uint64_t vecSize);
 
 ResultStatus fillFloatVector(const std::string &str,
-    std::vector<float> &floatVec, int vecSize);
+    std::vector<float> &floatVec, uint64_t vecSize);
 
 ResultStatus fillStringVector(const std::string &str,
-    std::vector<std::string> &stringVec, int vecSize);
+    std::vector<std::string> &stringVec, uint64_t vecSize);
+
+std::vector<std::string> split(const std::string &str, char separator);
 
 template <typename T>
 void printVector(const std::vector<T> &vec, const int &size, const std::string &type) {

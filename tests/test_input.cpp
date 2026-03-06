@@ -4,6 +4,9 @@
 
 #include <gtest/gtest.h>
 #include "../includes/functions.h"
+#include "../includes/Tests.h"
+#include "../includes/Menu.h"
+#include "../includes/NetWork.h"
 
 TEST(InputVectorTest, CheckNoNumberInString) {
     std::vector<int> vecInt(4);

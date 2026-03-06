@@ -14,5 +14,7 @@ add_executable(${PROJECT_NAME} sources/main.cpp
         includes/Menu.h
         includes/Tests.h
         sources/Tests.cpp
+        includes/NetWork.h
+        sources/NetWork.cpp
 )
 include(cmake/cppcheck.cmake)

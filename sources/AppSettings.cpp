@@ -146,8 +146,7 @@ ResultStatus AppSettings::checkNeedFlag() const {
     return ResultStatus::Error("Haven't need flags.");
 }
 
-ResultStatus AppSettings::createConfig(const int &argc, const char *argv[]) {
-
+ResultStatus AppSettings::loopForIpnutArgs(const int &argc, const char *argv[]) {
     for (int i = 1; i < argc; i++) {
         const uint64_t hashFlag = hashString(argv[i]);
         const std::string flag = argv[i];
@@ -170,11 +169,22 @@ ResultStatus AppSettings::createConfig(const int &argc, const char *argv[]) {
         }
     }
 
-    const ResultStatus res = checkNeedFlag();
-    logger(res);
+    return ResultStatus::Good();
+}
 
-    if (res.isError()) {
-        return res;
+ResultStatus AppSettings::createConfig(const int &argc, const char *argv[]) {
+
+    const ResultStatus statusLoop = loopForIpnutArgs(argc, argv);
+
+    if (statusLoop.isError()) {
+        return statusLoop;
+    }
+
+    const ResultStatus resCheckFlags = checkNeedFlag();
+    logger(resCheckFlags);
+
+    if (resCheckFlags.isError()) {
+        return resCheckFlags;
     }
 
     return ResultStatus::Good();

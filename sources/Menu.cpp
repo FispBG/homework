@@ -55,45 +55,38 @@ void Menu::findItem(const uint64_t &hashCommand) {
 
 }
 
-int takeSize() {
+std::vector<std::string> takeAndSplitStringToVector() {
+    std::string input;
+    std::getline(std::cin, input);
 
-    int size = 0;
-    std::cout << "Enter count parameters: ";
-    std::cin >> size;
-    std::cin.ignore();
-    return size;
+    std::vector<std::string> params = split(input, ' ');
+
+    return params;
 };
 
 
 void CommandTest::action() {
     std::vector<std::unique_ptr<Test>> vecTests;
     std::vector<std::string> params;
-    std::string input;
-    int size = 0;
 
     std::cout << "Tests" << std::endl;
     std::cout << "---------------------" << std::endl;
     std::cout << "Connection test" << std::endl;
-    size = takeSize();
+    std::cout << "Enter connection params(1.2.3.4 43243): ";
 
-    std::cout << "Enter connection params(ip or port): ";
-    std::getline(std::cin, input);
-    fillStringVector(input, params, size);
+    params = takeAndSplitStringToVector();
     vecTests.push_back(std::make_unique<ConnectionTest>(params));
 
     std::cout << "---------------------" << std::endl;
     std::cout << "Resource test" << std::endl;
-    size = takeSize();
-
     std::cout << "Enter file names: ";
-    std::getline(std::cin, input);
-    fillStringVector(input, params, size);
 
+    params = takeAndSplitStringToVector();
     vecTests.push_back(std::make_unique<ResourceTest>(params, appSettings.getLib()));
 
     std::cout << "---------------------" << std::endl;
-
     system("clear");
+
     for (const auto &it : vecTests) {
         it->test();
         std::cout << "---------------------" << std::endl;
@@ -128,10 +121,41 @@ void CommandShow::action() {
     }
 
     std::cout << "Your current type: " << type << std::endl;
+    std::cout << "Your current ip: " << ipAddress << std::endl;
     std::cout << "-------------------" << std::endl;
-
     std::cout << "Press enter to continue: ";
     getchar();
+}
+
+void CommandIpAddress::action() {
+    std::cout << "Input format 1.1.1.1 or 1 1 1 1 or 0x01010101." << std::endl;
+    std::string input;
+    std::vector<int> intVec;
+    std::getline(std::cin, input);
+
+    input = stringStrip(input);
+    fillIntVector(input, intVec, 4);
+    ResultStatus res;
+    if (intVec.size() == 4) {
+        res = ipAddress.setIpAddress(intVec);
+    }
+    else if (isIpAddress(input)) {
+        res = ipAddress.setIpAddress(input);
+    }
+    else if (hexStringIsIp(input)) {
+        res = ipAddress.setIpAddress(hexStringToUint32_t(input));
+    }
+
+    if (res.isNone()) {
+        res = ResultStatus::Error("Input incorrect ip: " + input);
+    }
+
+    logger(res);
+
+    if (!res.isGood()) {
+        std::cout << "Press enter to continue: ";
+        getchar();
+    }
 }
 
 void printMenu(const std::string &name) {
@@ -143,6 +167,7 @@ void printMenu(const std::string &name) {
     std::cout << "input - input vector value" << std::endl;
     std::cout << "test - check connections and files" << std::endl;
     std::cout << "show - show last vector and current type" << std::endl;
+    std::cout << "ip - input ip to connect" << std::endl;
     std::cout << "exit - close program" << std::endl;
     std::cout << "-------------------" << std::endl;
     std::cout << "Command: ";

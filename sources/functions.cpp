@@ -9,30 +9,34 @@
 #include <fstream>
 
 ResultStatus ResultStatus::Good() {
-    ResultStatus good = {Good_Stat, "", 0, ""};
+    ResultStatus good = {Status::Good, "", 0, ""};
     return good;
 }
 
 ResultStatus ResultStatus::Error(const std::string &msg) {
-    ResultStatus err = {Error_Stat, msg, __LINE__, __FILE__};
+    ResultStatus err = {Status::Error, msg, __LINE__, __FILE__};
     return err;
 }
 
 ResultStatus ResultStatus::Warning(const std::string &msg) {
-    ResultStatus warning = {Warning_Stat, msg, __LINE__, __FILE__};
+    ResultStatus warning = {Status::Warning, msg, __LINE__, __FILE__};
     return warning;
 }
 
 bool ResultStatus::isError() const {
-    return condition == Error_Stat;
+    return condition == Status::Error;
 }
 
 bool ResultStatus::isWarning() const {
-    return condition == Warning_Stat;
+    return condition == Status::Warning;
 }
 
 bool ResultStatus::isGood() const {
-    return condition == Good_Stat;
+    return condition == Status::Good;
+}
+
+bool ResultStatus::isNone() const {
+    return condition == Status::None;
 }
 
 void logger(const ResultStatus &result) {
@@ -68,7 +72,7 @@ void logger(const ResultStatus &result) {
 bool isIpAddress(const std::string &ip) {
     std::stringstream ss(ip);
     std::string byte;
-    int count = 0;
+    uint64_t count = 0;
 
     if (ip.back() == '.') {
         return false;
@@ -118,26 +122,71 @@ bool isPort(const std::string &port) {
     return false;
 }
 
+std::string stringStrip(const std::string &str) {
+    const uint64_t startText = str.find_first_not_of(" \t\n\r\f\v");
+
+    if (startText == std::string::npos) {
+        return "";
+    }
+    const uint64_t endText = str.find_last_not_of(" \t\n\r\f\v");
+
+    return str.substr(startText, endText - startText + 1);
+}
+
 std::string fixInputString(const std::string &str) {
     std::string newString;
 
     for (const char ch : str) {
         const int chValue = std::tolower(ch);
+
         if (std::isprint(chValue)) {
             newString.push_back(static_cast<char>(chValue));
         }
     }
 
-    return newString;
+    return stringStrip(newString);
+}
+
+bool hexStringIsIp(const std::string &str) {
+    if (str.length() != 10) {
+        return false;
+    }
+
+    if (str[0] != '0' || (str[1] != 'x' && str[1] != 'X')) {
+        return false;
+    }
+
+    for (uint8_t i = 2; i < str.length(); i++) {
+        char ch = str[i];
+
+        if (!((ch >= '0' && ch <= '9') ||
+            (ch >= 'a' && ch <= 'f') ||
+            (ch >= 'A' && ch <= 'F')
+            )) {
+            return false;
+            }
+    }
+
+    return true;
+}
+
+uint32_t hexStringToUint32_t(const std::string &str) {
+    uint32_t hexInt;
+    std::stringstream ss;
+
+    ss << std::hex << str;
+    ss >> hexInt;
+
+    return hexInt;
 }
 
 template<typename T, typename Transform>
 ResultStatus validateNumberString(const std::string &str, std::vector<T> &vecNumbers,
-    const int vecSize, Transform transform) {
+    const uint64_t vecSize, Transform transform) {
 
     std::istringstream ss(str);
     std::string element;
-    int count = 0;
+    uint64_t count = 0;
 
     while (getline(ss, element, ' ')) {
         if (count == vecSize) {
@@ -163,12 +212,12 @@ ResultStatus validateNumberString(const std::string &str, std::vector<T> &vecNum
     return ResultStatus::Good();
 }
 
-ResultStatus validateString(const std::string &str, const int vecSize,
+ResultStatus validateString(const std::string &str, const uint64_t vecSize,
     std::vector<std::string> &vecString) {
 
     std::istringstream ss(str);
     std::string element;
-    int count = 0;
+    uint64_t count = 0;
 
     while (getline(ss, element, ' ')) {
         if (count == vecSize) {
@@ -191,7 +240,7 @@ long stringToLongDec(const char* str, char** end) {
 }
 
 ResultStatus fillIntVector(const std::string &str,
-    std::vector<int> &intVec, const int vecSize) {
+    std::vector<int> &intVec, const uint64_t vecSize) {
 
     std::vector<int> tempInt(vecSize);
     ResultStatus res = validateNumberString(str, tempInt, vecSize, stringToLongDec);
@@ -203,7 +252,7 @@ ResultStatus fillIntVector(const std::string &str,
 }
 
 ResultStatus fillFloatVector(const std::string &str,
-    std::vector<float> &floatVec, const int vecSize) {
+    std::vector<float> &floatVec, const uint64_t vecSize) {
 
     std::vector<float> tempFloat(vecSize);
     ResultStatus res = validateNumberString(str, tempFloat, vecSize, strtod);
@@ -215,7 +264,7 @@ ResultStatus fillFloatVector(const std::string &str,
 }
 
 ResultStatus fillStringVector(const std::string &str,
-    std::vector<std::string> &stringVec, const int vecSize) {
+    std::vector<std::string> &stringVec, const uint64_t vecSize) {
 
     std::vector<std::string> tempString(vecSize);
     ResultStatus res = validateString(str, vecSize, tempString);
@@ -231,7 +280,7 @@ ResultStatus fillVectors(std::vector<std::string> &stringVec,
     std::vector<float> &floatVec,
     const std::string &type,
     const std::string &str,
-    int vecSize) {
+    const uint64_t vecSize) {
 
     const uint64_t hashType = hashString(type.c_str());
 
@@ -270,7 +319,7 @@ void processInputType(std::string &type)  {
 ResultStatus processInputVector(const std::string &type,
                       std::vector<std::string> &stringVec,
                       std::vector<int> &intVec,
-                      std::vector<float> &floatVec, const int size)  {
+                      std::vector<float> &floatVec, const uint64_t size)  {
 
     std::string inputStr;
     std::cout << "Input " << type << " vector: ";
@@ -303,3 +352,15 @@ ResultStatus processInputName(std::string &name) {
     return ResultStatus::Good();
 }
 
+std::vector<std::string> split(const std::string &str, const char separator) {
+    std::vector<std::string> stringVec;
+
+    std::stringstream ss(str);
+    std::string subStr;
+
+    while (getline(ss, subStr, separator)) {
+        stringVec.push_back(subStr);
+    }
+
+    return stringVec;
+}

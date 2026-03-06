@@ -9,6 +9,7 @@
 #include "AppSettings.h"
 #include "DataPool.h"
 #include "functions.h"
+#include "NetWork.h"
 
 class MenuItem {
 public:
@@ -36,11 +37,11 @@ public:
 };
 
 // Инвариант - pool — валидная ссылка на объект
-// size > 0, иначе не смысла от объекта
+// size > 0
 class CommandVectorInput : public MenuItem {
     DataPool &pool;
     std::string &type;
-    int size = 0;
+    uint64_t size = 0;
 public:
     explicit CommandVectorInput(DataPool &inputPool,
         std::string &typeNow, const int size) : pool(inputPool), type(typeNow), size(size) {};
@@ -64,19 +65,29 @@ public:
 };
 
 // Инвариант - pool — валидная ссылка на объект
-// vecSize > 0, иначе не смысла от объекта
+// vecSize > 0
 class CommandShow : public MenuItem {
     DataPool &pool;
     std::string &type;
-    int vecSize = 0;
+    uint64_t vecSize = 0;
+    IpAddress &ipAddress;
+
 public:
     explicit CommandShow(DataPool &pool, std::string &type,
-        const int size) : pool(pool), type(type), vecSize(size) {};
+        const int size, IpAddress &ipAddr) :
+        pool(pool), type(type), vecSize(size), ipAddress(ipAddr) {};
 
     void action() override;
 
 };
 
+class CommandIpAddress : public MenuItem {
+    IpAddress &ipAddress;
+
+public:
+    explicit CommandIpAddress(IpAddress &ipAddress) : ipAddress(ipAddress) {};
+    void action() override;
+};
 
 // Инвариант - уникальные ключи в items
 // Указатели в items не nullptr

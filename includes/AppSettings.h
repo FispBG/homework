@@ -29,6 +29,7 @@ class AppSettings {
     bool processUserFlags(uint64_t flag, const std::string &argFlag, ResultStatus &res);
     bool processAppFlags(uint64_t flag, const std::string &argFlag, ResultStatus &res);
 
+    ResultStatus loopForIpnutArgs(const int &argc, const char *argv[]);
     ResultStatus processingFlag(uint64_t hashFlag, const std::string &flag, const std::string& argFlag);
     ResultStatus checkNeedFlag() const;
 

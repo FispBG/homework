@@ -7,25 +7,13 @@
 #include "../includes/AppSettings.h"
 #include "../includes/DataPool.h"
 #include "../includes/Menu.h"
+#include "../includes/NetWork.h"
 
 #define VEC_SIZE 4
 
-void printVariables(const std::vector<std::string> &stringVec,
-    const std::vector<int> &intVec,
-    const std::vector<float> &floatVec,
-    const std::string &type) {
-
-    std::cout << "-------------------" << std::endl;
-    std::cout << "Your type: " << type << std::endl;
-    std::cout << "Your vectors" << std::endl;
-    printVector(stringVec, VEC_SIZE, "String");
-    printVector(intVec, VEC_SIZE, "Int");
-    printVector(floatVec, VEC_SIZE, "Float");
-    std::cout << "-------------------" << std::endl;
-}
-
 int main(const int argc, const char **argv) {
     AppSettings settings;
+
     ResultStatus configCreate = settings.createConfig(argc, argv);
 
     if (configCreate.isError()) {
@@ -34,13 +22,15 @@ int main(const int argc, const char **argv) {
 
     DataPool pool(2);
     Menu menu;
+    IpAddress ipConnect;
     std::string type = "string";
 
     menu.addItem("name", new CommandName(settings));
     menu.addItem("input", new CommandVectorInput(pool, type, VEC_SIZE));
     menu.addItem("type", new CommandType(type));
     menu.addItem("test", new CommandTest(settings));
-    menu.addItem("show", new CommandShow(pool, type, VEC_SIZE));
+    menu.addItem("show", new CommandShow(pool, type, VEC_SIZE, ipConnect));
+    menu.addItem("ip", new CommandIpAddress(ipConnect));
     menu.addItem("exit", new CommandExit());
 
     while (true) {
