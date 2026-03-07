@@ -137,7 +137,7 @@ std::string fixInputString(const std::string &str) {
     std::string newString;
 
     for (const char ch : str) {
-        const int chValue = std::tolower(ch);
+        const uint8_t chValue = std::tolower(ch);
 
         if (std::isprint(chValue)) {
             newString.push_back(static_cast<char>(chValue));
@@ -147,8 +147,8 @@ std::string fixInputString(const std::string &str) {
     return stringStrip(newString);
 }
 
-bool hexStringIsIp(const std::string &str) {
-    if (str.length() != 10) {
+bool hexStringIsIpWithPort(const std::string &str) {
+    if (str.length() != 14) {
         return false;
     }
 
@@ -170,8 +170,8 @@ bool hexStringIsIp(const std::string &str) {
     return true;
 }
 
-uint32_t hexStringToUint32_t(const std::string &str) {
-    uint32_t hexInt;
+uint64_t hexStringToUint64_t(const std::string &str) {
+    uint64_t hexInt;
     std::stringstream ss;
 
     ss << std::hex << str;
@@ -240,9 +240,9 @@ long stringToLongDec(const char* str, char** end) {
 }
 
 ResultStatus fillIntVector(const std::string &str,
-    std::vector<int> &intVec, const uint64_t vecSize) {
+    std::vector<int64_t> &intVec, const uint64_t vecSize) {
 
-    std::vector<int> tempInt(vecSize);
+    std::vector<int64_t> tempInt(vecSize);
     ResultStatus res = validateNumberString(str, tempInt, vecSize, stringToLongDec);
     if (!res.isError()) {
         intVec = std::move(tempInt);
@@ -276,7 +276,7 @@ ResultStatus fillStringVector(const std::string &str,
 }
 
 ResultStatus fillVectors(std::vector<std::string> &stringVec,
-    std::vector<int> &intVec,
+    std::vector<int64_t> &intVec,
     std::vector<float> &floatVec,
     const std::string &type,
     const std::string &str,
@@ -318,7 +318,7 @@ void processInputType(std::string &type)  {
 
 ResultStatus processInputVector(const std::string &type,
                       std::vector<std::string> &stringVec,
-                      std::vector<int> &intVec,
+                      std::vector<int64_t> &intVec,
                       std::vector<float> &floatVec, const uint64_t size)  {
 
     std::string inputStr;

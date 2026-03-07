@@ -127,27 +127,57 @@ void CommandShow::action() {
     getchar();
 }
 
+bool CommandIpAddress::workWithIpString(const std::string &input, ResultStatus &res) const {
+    const std::vector<std::string> ipAndPort = split(input, ':');
+
+    if (ipAndPort.size() != 2) {
+        return false;
+    }
+
+    if (!(isIpAddress(ipAndPort[0]) && isPort(ipAndPort[1]))) {
+        return false;
+    }
+
+    res = ipAddress.setIpAddress(input);
+
+    return true;
+}
+
+bool CommandIpAddress::workWithVecIntString(const std::string &input, ResultStatus &res) const {
+    std::vector<int64_t> intVec;
+    fillIntVector(input, intVec, 5);
+
+    if (intVec.size() != 5) {
+        return false;
+    }
+
+    res = ipAddress.setIpAddress(intVec);
+    return true;
+}
+
+bool CommandIpAddress::workWithHexString(const std::string &input, ResultStatus &res) const {
+    if (!hexStringIsIpWithPort(input)) {
+        return false;
+    }
+
+    const uint64_t hex = hexStringToUint64_t(input);
+    res = ipAddress.setIpAddress(hex);
+    return true;
+}
+
 void CommandIpAddress::action() {
-    std::cout << "Input format 1.1.1.1 or 1 1 1 1 or 0x01010101." << std::endl;
+    std::cout << "Input format 1.1.1.1:5345 or 1 1 1 1 5345 or 0x0101010114E1." << std::endl;
     std::string input;
-    std::vector<int> intVec;
     std::getline(std::cin, input);
-
     input = stringStrip(input);
-    fillIntVector(input, intVec, 4);
-    ResultStatus res;
-    if (intVec.size() == 4) {
-        res = ipAddress.setIpAddress(intVec);
-    }
-    else if (isIpAddress(input)) {
-        res = ipAddress.setIpAddress(input);
-    }
-    else if (hexStringIsIp(input)) {
-        res = ipAddress.setIpAddress(hexStringToUint32_t(input));
-    }
 
-    if (res.isNone()) {
-        res = ResultStatus::Error("Input incorrect ip: " + input);
+    ResultStatus res;
+    const bool status = workWithIpString(input, res) ||
+            workWithVecIntString(input, res) ||
+            workWithHexString(input, res);
+
+    if (!status) {
+        res = ResultStatus::Error("Input incorrect address: " + input);
     }
 
     logger(res);

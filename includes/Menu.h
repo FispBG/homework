@@ -84,8 +84,13 @@ public:
 class CommandIpAddress : public MenuItem {
     IpAddress &ipAddress;
 
+    bool workWithIpString(const std::string &input, ResultStatus &res) const;
+    bool workWithVecIntString(const std::string &input, ResultStatus &res) const;
+    bool workWithHexString(const std::string &input, ResultStatus &res) const;
+
 public:
     explicit CommandIpAddress(IpAddress &ipAddress) : ipAddress(ipAddress) {};
+
     void action() override;
 };
 

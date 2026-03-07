@@ -11,7 +11,7 @@
 struct MyVec {
     std::string type;
     std::vector<std::string> stringVec;
-    std::vector<int> intVec;
+    std::vector<int64_t> intVec;
     std::vector<float> floatVec;
 };
 
