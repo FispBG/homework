@@ -17,7 +17,7 @@ int main(const int argc, const char **argv) {
     ResultStatus configCreate = settings.createConfig(argc, argv);
 
     if (configCreate.isError()) {
-        return -1;
+        exit(-1);
     }
 
     DataPool pool(2);

@@ -13,16 +13,15 @@
 struct ResultStatus;
 
 class IpAddress {
-    std::array<uint32_t, 4> ip = {0, 0, 0, 0};
+    std::array<uint16_t, 4> ip = {0, 0, 0, 0};
+    uint16_t port = 0;
     bool ipInput = false;
 public:
     explicit IpAddress() = default;
 
-    ResultStatus setIpAddress(uint32_t hex);
+    ResultStatus setIpAddress(uint64_t hex);
     ResultStatus setIpAddress(const std::string &ipStr);
-    ResultStatus setIpAddress(const std::vector<int32_t> &ipVectorInt);
-
-    bool getIpAddress() const;
+    ResultStatus setIpAddress(const std::vector<int64_t> &ipVectorInt);
 
     friend std::ostream& operator << (std::ostream& os, const IpAddress& netAddress);
 };
