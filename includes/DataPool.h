@@ -5,8 +5,6 @@
 #ifndef HOMEWORK_DATAPOOL_H
 #define HOMEWORK_DATAPOOL_H
 
-#include <random>
-
 #include "../includes/functions.h"
 
 // Инвариант - type является одним из: int, float, string
