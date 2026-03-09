@@ -3,7 +3,6 @@
 //
 #include "../includes/functions.h"
 
-#include <sstream>
 #include <iomanip>
 #include <chrono>
 #include <fstream>
@@ -180,101 +179,6 @@ uint64_t hexStringToUint64_t(const std::string &str) {
     return hexInt;
 }
 
-template<typename T, typename Transform>
-ResultStatus validateNumberString(const std::string &str, std::vector<T> &vecNumbers,
-    const uint64_t vecSize, Transform transform) {
-
-    std::istringstream ss(str);
-    std::string element;
-    uint64_t count = 0;
-
-    while (getline(ss, element, ' ')) {
-        if (count == vecSize) {
-            return ResultStatus::Warning("Size more, then vecSize.");
-        }
-
-        char* firstNotInt = nullptr;
-        vecNumbers[count] = transform(element.c_str(), &firstNotInt);
-        if (*firstNotInt != '\0') {
-            return ResultStatus::Error("Invalid number: " + element);
-        }
-
-        count++;
-    }
-
-    if (count < vecSize) {
-        return ResultStatus::Error("Need more argument input.");
-    }
-    if (count == vecSize && vecNumbers[3] == 0) {
-        return ResultStatus::Error("W-component invalid: " + element);
-    }
-
-    return ResultStatus::Good();
-}
-
-ResultStatus validateString(const std::string &str, const uint64_t vecSize,
-    std::vector<std::string> &vecString) {
-
-    std::istringstream ss(str);
-    std::string element;
-    uint64_t count = 0;
-
-    while (getline(ss, element, ' ')) {
-        if (count == vecSize) {
-            return ResultStatus::Warning("Size more, then vecSize.");
-        }
-
-        vecString[count] = element;
-        count++;
-    }
-
-    if (count < vecSize) {
-        return ResultStatus::Error("Need more argument input.");
-    }
-
-    return ResultStatus::Good();
-}
-
-long stringToLongDec(const char* str, char** end) {
-    return std::strtol(str, end, 10);
-}
-
-ResultStatus fillIntVector(const std::string &str,
-    std::vector<int64_t> &intVec, const uint64_t vecSize) {
-
-    std::vector<int64_t> tempInt(vecSize);
-    ResultStatus res = validateNumberString(str, tempInt, vecSize, stringToLongDec);
-    if (!res.isError()) {
-        intVec = std::move(tempInt);
-    }
-
-    return res;
-}
-
-ResultStatus fillFloatVector(const std::string &str,
-    std::vector<float> &floatVec, const uint64_t vecSize) {
-
-    std::vector<float> tempFloat(vecSize);
-    ResultStatus res = validateNumberString(str, tempFloat, vecSize, strtod);
-    if (!res.isError()) {
-        floatVec = std::move(tempFloat);
-    }
-
-    return res;
-}
-
-ResultStatus fillStringVector(const std::string &str,
-    std::vector<std::string> &stringVec, const uint64_t vecSize) {
-
-    std::vector<std::string> tempString(vecSize);
-    ResultStatus res = validateString(str, vecSize, tempString);
-    if (!res.isError()) {
-        stringVec = std::move(tempString);
-    }
-
-    return res;
-}
-
 ResultStatus fillVectors(std::vector<std::string> &stringVec,
     std::vector<int64_t> &intVec,
     std::vector<float> &floatVec,
@@ -286,13 +190,13 @@ ResultStatus fillVectors(std::vector<std::string> &stringVec,
 
     switch (hashType) {
         case hashString("int"):
-            return fillIntVector(str, intVec, vecSize);
+            return fillVector(str, intVec, vecSize);
 
         case hashString("float"):
-            return fillFloatVector(str, floatVec, vecSize);
+            return fillVector(str, floatVec, vecSize);
 
         case hashString("string"):
-            return fillStringVector(str, stringVec, vecSize);
+            return fillVector(str, stringVec, vecSize);
 
         default:
             return ResultStatus::Error("Unknown hash type.");

@@ -4,12 +4,15 @@
 
 #ifndef HOMEWORK_MENU_H
 #define HOMEWORK_MENU_H
+
 #include <unordered_map>
+#include <memory>
 
 #include "AppSettings.h"
 #include "DataPool.h"
 #include "functions.h"
 #include "NetWork.h"
+
 
 class MenuItem {
 public:
@@ -38,16 +41,35 @@ public:
 
 // Инвариант - pool — валидная ссылка на объект
 // size > 0
+template <uint64_t size>
 class CommandVectorInput : public MenuItem {
-    DataPool &pool;
+    DataPool<MyVec, size> &pool;
     std::string &type;
-    uint64_t size = 0;
+    uint64_t vecSize;
+
 public:
-    explicit CommandVectorInput(DataPool &inputPool,
-        std::string &typeNow, const int size) : pool(inputPool), type(typeNow), size(size) {};
+    explicit CommandVectorInput(DataPool<MyVec, size> &inputPool,
+        std::string &typeNow, const uint64_t sizeOneVec)
+        : pool(inputPool), type(typeNow), vecSize(sizeOneVec) {};
 
     void action() override;
 };
+
+template <uint64_t size>
+void CommandVectorInput<size>::action() {
+    MyVec vec;
+    vec.type = type;
+
+    const ResultStatus res = processInputVector(vec.type, vec.stringVec,
+        vec.intVec, vec.floatVec, vecSize);
+
+    if (!res.isError()) {
+        if (!pool.insert(vec)) {
+            std::cout << "Press enter to continue: ";
+            getchar();
+        }
+    }
+}
 
 // Инвариант - appSettings — валидная ссылка на объект
 class CommandTest : public MenuItem {
@@ -66,20 +88,52 @@ public:
 
 // Инвариант - pool — валидная ссылка на объект
 // vecSize > 0
+template <uint64_t size>
 class CommandShow : public MenuItem {
-    DataPool &pool;
+    DataPool<MyVec, size> &pool;
     std::string &type;
-    uint64_t vecSize = 0;
     IpAddress &ipAddress;
+    uint64_t vecSize;
 
 public:
-    explicit CommandShow(DataPool &pool, std::string &type,
-        const int size, IpAddress &ipAddr) :
-        pool(pool), type(type), vecSize(size), ipAddress(ipAddr) {};
+    explicit CommandShow(DataPool<MyVec, size> &pool,
+        std::string &type, IpAddress &ipAddr, const uint64_t sizeOneVec) :
+        pool(pool), type(type), ipAddress(ipAddr), vecSize(sizeOneVec) {};
 
     void action() override;
-
 };
+
+template <uint64_t size>
+void CommandShow<size>::action() {
+    std::cout << "-------------------" << std::endl;
+    std::cout << "Your vector:" << std::endl;
+    if (pool.empty()) {
+        logger(ResultStatus::Warning("No one vector input."));
+    }else {
+        MyVec vec = pool.last();
+        switch (hashString(vec.type.c_str())) {
+            case(hashString("int")):
+                printVector(vec.intVec, size, vec.type);
+                break;
+
+            case(hashString("float")):
+                printVector(vec.floatVec, size, vec.type);
+                break;
+
+            case(hashString("string")):
+                printVector(vec.stringVec, size, vec.type);
+                break;
+
+            default:;
+        }
+    }
+
+    std::cout << "Your current type: " << type << std::endl;
+    std::cout << "Your current ip: " << ipAddress << std::endl;
+    std::cout << "-------------------" << std::endl;
+    std::cout << "Press enter to continue: ";
+    getchar();
+}
 
 class CommandIpAddress : public MenuItem {
     IpAddress &ipAddress;
@@ -100,7 +154,7 @@ class Menu {
     std::unordered_map<uint64_t, std::unique_ptr<MenuItem>> items;
 
 public:
-    void addItem(const std::string &name, MenuItem *item);
+    void addItem(const std::string &name, std::unique_ptr<MenuItem> item);
     void findItem(const uint64_t &hashCommand);
 };
 

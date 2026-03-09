@@ -11,6 +11,7 @@
 #include <vector>
 #include <string>
 #include <thread>
+#include <sstream>
 
 enum class Status {
     Good,
@@ -59,21 +60,51 @@ ResultStatus fillVectors(std::vector<std::string> &stringVec,
     const std::string &str,
     uint64_t vecSize);
 
-ResultStatus fillIntVector(const std::string &str,
-    std::vector<int64_t> &intVec, uint64_t vecSize);
-
-ResultStatus fillFloatVector(const std::string &str,
-    std::vector<float> &floatVec, uint64_t vecSize);
-
-ResultStatus fillStringVector(const std::string &str,
-    std::vector<std::string> &stringVec, uint64_t vecSize);
-
 std::vector<std::string> split(const std::string &str, char separator);
+
+template<typename T>
+ResultStatus fillVector(const std::string &str,
+    std::vector<T> &vecInput, const uint64_t vecSize) {
+
+    std::istringstream ss(str);
+    std::string elementString;
+    std::vector<T> vecTemp;
+    uint64_t count = 0;
+
+    while (std::getline(ss, elementString, ' ')) {
+        if (count == vecSize) {
+            logger(ResultStatus::Warning("Size more, then vecSize."));
+            break;
+        }
+
+        T elementTryConvert;
+        std::istringstream convertStream(elementString);
+
+        if (!(convertStream >> elementTryConvert) || !convertStream.eof()) {
+            return ResultStatus::Error("Invalid element: " + elementString);
+        }
+
+        vecTemp.push_back(elementTryConvert);
+        count++;
+    }
+
+    if (count < vecSize) {
+        return ResultStatus::Error("Need more argument input.");
+    }
+    if constexpr (std::is_arithmetic_v<T>) {
+        if (vecTemp[3] == 0) {
+            return ResultStatus::Error("W-component invalid: 0.");
+        }
+    }
+
+    vecInput = std::move(vecTemp);
+    return ResultStatus::Good();
+}
 
 template <typename T>
 void printVector(const std::vector<T> &vec, const uint64_t &size, const std::string &type) {
     std::cout << type << ": ";
-    for (uint64_t i = 0; i < size; i++) {
+    for (uint64_t i = 0; i < size && i < vec.size(); i++) {
         std::cout << vec[i] << " ";
     }
     std::cout << std::endl;

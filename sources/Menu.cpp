@@ -19,29 +19,14 @@ void CommandType::action() {
     processInputType(typeNow);
 }
 
-void CommandVectorInput::action() {
-    MyVec vec;
-    vec.type = type;
-
-    const ResultStatus res = processInputVector(vec.type, vec.stringVec,
-        vec.intVec, vec.floatVec, size);
-
-    if (!res.isError()) {
-        if (!pool.insert(vec)) {
-            std::cout << "Press enter to continue: ";
-            getchar();
-        }
-    }
-}
-
 void CommandExit::action() {
     exit(0);
 }
 
-void Menu::addItem(const std::string &name, MenuItem *item) {
+void Menu::addItem(const std::string &name, std::unique_ptr<MenuItem> item) {
     const uint64_t hashName = hashString(name.c_str());
 
-    items[hashName] = std::unique_ptr<MenuItem>(item);
+    items[hashName] = std::move(item);
 }
 
 void Menu::findItem(const uint64_t &hashCommand) {
@@ -96,37 +81,6 @@ void CommandTest::action() {
     getchar();
 }
 
-void CommandShow::action() {
-    std::cout << "-------------------" << std::endl;
-    std::cout << "Your vector:" << std::endl;
-    if (pool.empty()) {
-        logger(ResultStatus::Warning("No one vector input."));
-    }else {
-        MyVec vec = pool.last();
-        switch (hashString(vec.type.c_str())) {
-            case(hashString("int")):
-                printVector(vec.intVec, vecSize, vec.type);
-                break;
-
-            case(hashString("float")):
-                printVector(vec.floatVec, vecSize, vec.type);
-                break;
-
-            case(hashString("string")):
-                printVector(vec.stringVec, vecSize, vec.type);
-                break;
-
-            default:;
-        }
-    }
-
-    std::cout << "Your current type: " << type << std::endl;
-    std::cout << "Your current ip: " << ipAddress << std::endl;
-    std::cout << "-------------------" << std::endl;
-    std::cout << "Press enter to continue: ";
-    getchar();
-}
-
 bool CommandIpAddress::workWithIpString(const std::string &input, ResultStatus &res) const {
     const std::vector<std::string> ipAndPort = split(input, ':');
 
@@ -144,14 +98,15 @@ bool CommandIpAddress::workWithIpString(const std::string &input, ResultStatus &
 }
 
 bool CommandIpAddress::workWithVecIntString(const std::string &input, ResultStatus &res) const {
-    std::vector<int64_t> intVec;
-    fillIntVector(input, intVec, 5);
+    MyVec temp;
+    fillVectors(temp.stringVec, temp.intVec,
+        temp.floatVec, "int", input, 5);
 
-    if (intVec.size() != 5) {
+    if (temp.intVec.size() != 5) {
         return false;
     }
 
-    res = ipAddress.setIpAddress(intVec);
+    res = ipAddress.setIpAddress(temp.intVec);
     return true;
 }
 
@@ -198,7 +153,7 @@ void printMenu(const std::string &name) {
     std::cout << "test - check connections and files" << std::endl;
     std::cout << "show - show last vector and current type" << std::endl;
     std::cout << "ip - input ip to connect" << std::endl;
-    std::cout << "exit - close program" << std::endl;
+    std::cout << "exit/quit - close program" << std::endl;
     std::cout << "-------------------" << std::endl;
     std::cout << "Command: ";
 }
