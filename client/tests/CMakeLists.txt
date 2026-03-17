@@ -12,8 +12,14 @@ FetchContent_Declare(googletest
 FetchContent_MakeAvailable(googletest)
 
 add_executable(${PROJECT_NAME} test_input.cpp
-        ../includes/functions.h
-        ../sources/functions.cpp
+        ../../commonFunc/sources/functions.cpp
+        ../sources/AppSettings.cpp
+        ../sources/Tests.cpp
+        ../sources/SocketClient.cpp
+        ../includes/Tests.h
+        ../includes/AppSettings.h
+        ../includes/SocketClient.h
+        ../../commonFunc/includes/functions.h
 )
 
 target_link_libraries(${PROJECT_NAME} gtest_main gmock_main)

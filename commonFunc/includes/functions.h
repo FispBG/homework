@@ -2,16 +2,16 @@
 // Created by fisp on 23.02.2026.
 //
 
+#pragma once
 
-#ifndef HOMEWORK_FUNCTIONS_H
-#define HOMEWORK_FUNCTIONS_H
-
-#include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <vector>
 #include <string>
 #include <thread>
 #include <sstream>
+#include "./StandardPackets.h"
+#include <arpa/inet.h>
 
 enum class Status {
     Good,
@@ -61,6 +61,8 @@ ResultStatus fillVectors(std::vector<std::string> &stringVec,
     uint64_t vecSize);
 
 std::vector<std::string> split(const std::string &str, char separator);
+
+PacketString createPacketString(const std::string &str);
 
 template<typename T>
 ResultStatus fillVector(const std::string &str,
@@ -119,4 +121,30 @@ constexpr inline uint64_t hashString(const char* str) {
     return hash;
 }
 
-#endif //HOMEWORK_FUNCTIONS_H
+template <typename T, std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
+PacketVector createPacketVector(T x, T y, T z, T w) {
+    PacketVector packet{};
+
+    auto toNetwork = [](T value) {
+        uint32_t bytes;
+        std::memcpy(&bytes, &value, sizeof(uint32_t));
+        return ntohl(bytes);
+    };
+
+    packet.data.x = toNetwork(x);
+    packet.data.y = toNetwork(y);
+    packet.data.z = toNetwork(z);
+    packet.data.w = toNetwork(w);
+
+    return packet;
+}
+
+template <typename T, std::enable_if_t<std::is_integral_v<T>, bool> = true>
+PacketVector createPacketVector(T x, T y, T z, T w) {
+    return createPacketVector(
+        static_cast<float>(x),
+        static_cast<float>(y),
+        static_cast<float>(z),
+        static_cast<float>(w)
+    );
+}

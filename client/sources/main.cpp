@@ -29,10 +29,10 @@ int main(const int argc, const char **argv) {
 
     menu.addItem("name", std::make_unique<CommandName>(settings));
     menu.addItem("input", std::make_unique<CommandVectorInput<POOL_SIZE>>
-        (pool, type, VEC_SIZE));
+        (pool, type, VEC_SIZE, ipConnect));
 
     menu.addItem("type", std::make_unique<CommandType>(type));
-    menu.addItem("test", std::make_unique<CommandTest>(settings));
+    menu.addItem("filecheck", std::make_unique<CommandCheckResource>(settings));
     menu.addItem("show", std::make_unique<CommandShow<POOL_SIZE>>
         (pool, type, ipConnect, VEC_SIZE));
 
@@ -41,7 +41,7 @@ int main(const int argc, const char **argv) {
     menu.addItem("quit", std::make_unique<CommandExit>());
 
     while (true) {
-        printMenu(settings.getName());
+        printMenu(settings.get().name);
 
         std::string command;
         std::getline(std::cin, command);
@@ -53,3 +53,4 @@ int main(const int argc, const char **argv) {
         menu.findItem(hashCommand);
     }
 }
+

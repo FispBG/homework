@@ -3,7 +3,7 @@
 //
 
 #include "../includes/NetWork.h"
-#include "../includes/functions.h"
+#include "../../commonFunc/includes/functions.h"
 
 ResultStatus IpAddress::setIpAddress(const std::string &ipStr){
     ResultStatus status = ResultStatus::Error("Input not valid ip (need 10.10.10.10:5435 format).");
@@ -87,4 +87,25 @@ std::ostream& operator << (std::ostream& os, const IpAddress &netAddress) {
 
     os << ":" << netAddress.port;
     return os;
+}
+
+std::string IpAddress::getAddress() const {
+    return std::to_string(ip[0]) + "." +
+           std::to_string(ip[1]) + "." +
+           std::to_string(ip[2]) + "." +
+           std::to_string(ip[3]) + ":" +
+           std::to_string(port);
+}
+
+bool IpAddress::checkIpInput() const {
+    return ipInput;
+}
+
+uint16_t IpAddress::getPort() const {
+    return port;
+}
+
+std::string IpAddress::getIp() const {
+    return std::to_string(ip[0]) + "." + std::to_string(ip[1]) + "." +
+           std::to_string(ip[2]) + "." + std::to_string(ip[3]);
 }

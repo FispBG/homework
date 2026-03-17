@@ -2,16 +2,16 @@
 // Created by fisp on 01.03.2026.
 //
 
-#ifndef HOMEWORK_MENU_H
-#define HOMEWORK_MENU_H
+#pragma once
 
 #include <unordered_map>
 #include <memory>
 
 #include "AppSettings.h"
 #include "DataPool.h"
-#include "functions.h"
+#include "../../commonFunc/includes/functions.h"
 #include "NetWork.h"
+#include "SocketClient.h"
 
 
 class MenuItem {
@@ -44,16 +44,115 @@ public:
 template <uint64_t size>
 class CommandVectorInput : public MenuItem {
     DataPool<MyVec, size> &pool;
+    IpAddress &ipAddress;
     std::string &type;
     uint64_t vecSize;
 
+    bool sendToServer(const MyVec &vec) const;
+    ResultStatus processIntVec(const std::vector<int64_t> &vec, SocketClient &client) const;
+    ResultStatus processFloatVec(const std::vector<float> &vec, SocketClient &client) const;
+    ResultStatus processStringVec(const std::vector<std::string> &vec, SocketClient &client) const;
 public:
     explicit CommandVectorInput(DataPool<MyVec, size> &inputPool,
-        std::string &typeNow, const uint64_t sizeOneVec)
-        : pool(inputPool), type(typeNow), vecSize(sizeOneVec) {};
+        std::string &typeNow, const uint64_t sizeOneVec, IpAddress &ipAddr)
+        : pool(inputPool), ipAddress(ipAddr), type(typeNow), vecSize(sizeOneVec) {};
 
     void action() override;
 };
+
+template <uint64_t size>
+ResultStatus CommandVectorInput<size>::processIntVec(const std::vector<int64_t> &vec, SocketClient &client) const {
+
+    const PacketVector packetInt = createPacketVector(
+                vec[0], vec[1], vec[2], vec[3]);
+
+    if (!client.sendPacket(packetInt)) {
+        return ResultStatus::Error("Failed to send packet.");
+    }
+
+    const Vec4 answer = client.receiveVectorFloat();
+
+    std::cout << static_cast<int32_t> (answer.x) << " "
+    << static_cast<int32_t> (answer.y) << " "
+    << static_cast<int32_t> (answer.z) << " "
+    << static_cast<int32_t> (answer.w) << std::endl;
+
+    return ResultStatus::Good();
+}
+
+template <uint64_t size>
+ResultStatus CommandVectorInput<size>::processFloatVec(const std::vector<float> &vec, SocketClient &client) const {
+
+    const PacketVector packetFloat = createPacketVector(
+                vec[0], vec[1], vec[2], vec[3]);
+
+    if (!client.sendPacket(packetFloat)) {
+        return ResultStatus::Error("Failed to send packet.");
+    }
+
+    const Vec4 answer = client.receiveVectorFloat();
+
+    std::cout << answer.x << " " << answer.y << " " << answer.z << " " << answer.w << std::endl;
+
+    return ResultStatus::Good();
+}
+
+template <uint64_t size>
+ResultStatus CommandVectorInput<size>::processStringVec(const std::vector<std::string> &vec, SocketClient &client) const {
+
+    const PacketString packetStr = createPacketString(
+                vec[0] + vec[1] + vec[2] + vec[3]);
+
+    if (!client.sendPacket(packetStr)) {
+        return ResultStatus::Error("Failed to send packet.");
+    }
+
+    const int32_t answer = client.receiveInt();
+
+    std::cout << "Size string: " << answer << std::endl;
+
+    return ResultStatus::Good();
+}
+
+template <uint64_t size>
+bool CommandVectorInput<size>::sendToServer(const MyVec &vec) const {
+    if (!ipAddress.checkIpInput()) {
+        logger(ResultStatus::Warning("Input ip (select this command in menu)."));
+        return false;
+    }
+
+    SocketClient client(ipAddress.getIp(), ipAddress.getPort());
+
+    if (!client.clientIsRunning()) {
+        return false;
+    }
+    ResultStatus status;
+
+    switch (hashString(vec.type.c_str())) {
+        case hashString("int"):
+            status = processIntVec(vec.intVec, client);
+            break;
+
+        case hashString("float"):
+            status = processFloatVec(vec.floatVec, client);
+            break;
+
+        case hashString("string"):
+            status = processStringVec(vec.stringVec, client);
+            break;
+
+        default:
+            status = ResultStatus::Error("Type error.");
+    }
+
+    logger(status);
+
+    if (status.isError()) {
+        return false;
+    }
+
+    return true;
+}
 
 template <uint64_t size>
 void CommandVectorInput<size>::action() {
@@ -63,20 +162,25 @@ void CommandVectorInput<size>::action() {
     const ResultStatus res = processInputVector(vec.type, vec.stringVec,
         vec.intVec, vec.floatVec, vecSize);
 
-    if (!res.isError()) {
-        if (!pool.insert(vec)) {
-            std::cout << "Press enter to continue: ";
-            getchar();
-        }
+    logger(res);
+
+    if (res.isError() || !pool.insert(vec)) {
+        std::cout << "Press enter to continue: ";
+        getchar();
+        return;
     }
+
+    sendToServer(vec);
+    std::cout << "Press enter to continue: ";
+    getchar();
+
 }
 
 // Инвариант - appSettings — валидная ссылка на объект
-class CommandTest : public MenuItem {
+class CommandCheckResource : public MenuItem {
     AppSettings &appSettings;
-
 public:
-    explicit CommandTest(AppSettings &settings) : appSettings(settings) {};
+    explicit CommandCheckResource(AppSettings &settings) : appSettings(settings) {};
     void action() override;
 };
 
@@ -159,5 +263,3 @@ public:
 };
 
 void printMenu(const std::string &name);
-
-#endif //HOMEWORK_MENU_H

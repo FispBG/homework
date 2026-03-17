@@ -226,15 +226,14 @@ ResultStatus processInputVector(const std::string &type,
                       std::vector<float> &floatVec, const uint64_t size)  {
 
     std::string inputStr;
-    std::cout << "Input " << type << " vector: ";
+    std::cout << "Input " << type << " vector 4 elem separated by space (" << type << ' ' << type << ' ' << type << ' ' << type << ") : ";
     std::getline(std::cin, inputStr);
     const ResultStatus res = fillVectors(stringVec, intVec, floatVec, type, inputStr, size);
-    logger(res);
 
-    if (res.isError()) {
-        std::cout << "Press enter: ";
-        getchar();
-    }
+    // if (res.isError()) {
+    //     std::cout << "Press enter: ";
+    //     getchar();
+    // }
 
     return res;
 }
@@ -267,4 +266,17 @@ std::vector<std::string> split(const std::string &str, const char separator) {
     }
 
     return stringVec;
+}
+
+
+PacketString createPacketString(const std::string &str) {
+    PacketString packet{};
+
+    const uint32_t len = static_cast<uint32_t>(str.length());
+    packet.header.size = htonl(len);
+
+    std::memcpy(packet.string, str.c_str(), len);
+    packet.string[len] = '\0';
+
+    return packet;
 }

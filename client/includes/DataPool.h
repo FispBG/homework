@@ -2,10 +2,9 @@
 // Created by fisp on 28.02.2026.
 //
 
-#ifndef HOMEWORK_DATAPOOL_H
-#define HOMEWORK_DATAPOOL_H
+#pragma once
 
-#include "../includes/functions.h"
+#include "../../commonFunc/includes/functions.h"
 
 // Инвариант - type является одним из: int, float, string
 struct MyVec {
@@ -20,17 +19,17 @@ struct MyVec {
 // v_arr указывает на массив размером N
 template <typename T, uint64_t N>
 class DataPool {
-    std::unique_ptr<T[]> v_arr = std::make_unique<T[]>(N);
-    int tail = 0;
-    int head = 0;
-    int countElem = 0;
+    std::array<T , N> v_arr;
+    uint32_t tail = 0;
+    uint32_t head = 0;
+    uint32_t countElem = 0;
 
     public:
-    explicit DataPool() = default;
+    DataPool() = default;
     ~DataPool() = default;
 
     bool insert(const T &vec);
-    T first();
+    T first() const;
     T last() const;
     bool empty() const;
 };
@@ -47,11 +46,9 @@ bool DataPool<T, N>::insert(const T &vec) {
     return false;
 }
 template <typename T, uint64_t N>
-T DataPool<T, N>::first() {
+T DataPool<T, N>::first() const{
     if (countElem > 0) {
-        MyVec vec = v_arr[head];
-        countElem--;
-        head = (head + 1) % N;
+        T vec = v_arr[head];
         return vec;
     }
 
@@ -62,7 +59,7 @@ T DataPool<T, N>::first() {
 template <typename T, uint64_t N>
 T DataPool<T, N>::last() const {
     if (countElem > 0) {
-        MyVec vec = v_arr[(tail - 1 + N) % N];
+        T vec = v_arr[(tail - 1 + N) % N];
         return vec;
     }
     logger(ResultStatus::Warning("Vector pool is empty."));
@@ -77,5 +74,3 @@ bool DataPool<T, N>::empty() const {
 
     return true;
 }
-
-#endif //HOMEWORK_DATAPOOL_H

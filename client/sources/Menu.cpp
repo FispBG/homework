@@ -49,35 +49,18 @@ std::vector<std::string> takeAndSplitStringToVector() {
     return params;
 };
 
-
-void CommandTest::action() {
-    std::vector<std::unique_ptr<Test>> vecTests;
-    std::vector<std::string> params;
-
-    std::cout << "Tests" << std::endl;
-    std::cout << "---------------------" << std::endl;
-    std::cout << "Connection test" << std::endl;
-    std::cout << "Enter connection params(1.2.3.4 43243): ";
-
-    params = takeAndSplitStringToVector();
-    vecTests.push_back(std::make_unique<ConnectionTest>(params));
-
-    std::cout << "---------------------" << std::endl;
-    std::cout << "Resource test" << std::endl;
+void CommandCheckResource::action() {
+    std::cout << "Resource test." << std::endl;
     std::cout << "Enter file names: ";
 
-    params = takeAndSplitStringToVector();
-    vecTests.push_back(std::make_unique<ResourceTest>(params, appSettings.getLib()));
+    const std::vector<std::string> params = takeAndSplitStringToVector();
+    ResourceTest checkResource(params, appSettings.get().lib);
 
-    std::cout << "---------------------" << std::endl;
     system("clear");
 
-    for (const auto &it : vecTests) {
-        it->test();
-        std::cout << "---------------------" << std::endl;
-    }
+    checkResource.test();
 
-    std::cout << "Press enter to continue: ";
+    std::cout << "Press any button to continue: ";
     getchar();
 }
 
@@ -122,6 +105,7 @@ bool CommandIpAddress::workWithHexString(const std::string &input, ResultStatus 
 
 void CommandIpAddress::action() {
     std::cout << "Input format 1.1.1.1:5345 or 1 1 1 1 5345 or 0x0101010114E1." << std::endl;
+    std::cout << "My server work on 127.0.0.1:8080." << std::endl;
     std::string input;
     std::getline(std::cin, input);
     input = stringStrip(input);
@@ -132,15 +116,21 @@ void CommandIpAddress::action() {
             workWithHexString(input, res);
 
     if (!status) {
-        res = ResultStatus::Error("Input incorrect address: " + input);
-    }
-
-    logger(res);
-
-    if (!res.isGood()) {
+        logger(ResultStatus::Error("Input incorrect address: " + input));
         std::cout << "Press enter to continue: ";
         getchar();
+        return;
     }
+
+    const std::vector<std::string> inputParams {ipAddress.getAddress()};
+    ConnectionTest connection{inputParams};
+    if (!connection.test()) {
+        logger(ResultStatus::Error("Cant connect to address: " + input));
+        std::cout << "Press enter to continue: ";
+        getchar();
+        return;
+    }
+
 }
 
 void printMenu(const std::string &name) {
@@ -149,10 +139,10 @@ void printMenu(const std::string &name) {
     std::cout << "-------------------" << std::endl;
     std::cout << "name - input name" << std::endl;
     std::cout << "type - input type vector" << std::endl;
-    std::cout << "input - input vector value" << std::endl;
-    std::cout << "test - check connections and files" << std::endl;
-    std::cout << "show - show last vector and current type" << std::endl;
-    std::cout << "ip - input ip to connect" << std::endl;
+    std::cout << "input - input vector value and multi him on server" << std::endl;
+    std::cout << "filecheck - check files in dict (from flag -l)" << std::endl;
+    std::cout << "show - show last vector, current type and address connect" << std::endl;
+    std::cout << "ip - input ip and port to connect" << std::endl;
     std::cout << "exit/quit - close program" << std::endl;
     std::cout << "-------------------" << std::endl;
     std::cout << "Command: ";
