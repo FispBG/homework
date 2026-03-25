@@ -17,16 +17,24 @@ struct ResultStatus;
 // ipInput == true адрес установлен
 class IpAddress {
     std::array<uint16_t, 4> ip = {0, 0, 0, 0};
-    uint16_t port = 0;
+    uint16_t port = -1;
     bool ipInput = false;
+    bool portInput = false;
+
 public:
     explicit IpAddress() = default;
 
-    ResultStatus setIpAddress(uint64_t hex);
-    ResultStatus setIpAddress(const std::string &ipStr);
-    ResultStatus setIpAddress(const std::vector<int64_t> &ipVectorInt);
+    ResultStatus setAddress(uint64_t hex);
+
+    bool setPort(const std::string &inputPort);
+    bool setIp(const std::string &inputIp);
+
+    ResultStatus setAddress(const std::string &ipStr);
+    ResultStatus setAddress(const std::vector<int64_t> &ipVectorInt);
     std::string getAddress() const;
     bool checkIpInput() const;
+
+    bool checkPortInput() const;
 
     uint16_t getPort() const;
     std::string getIp() const;

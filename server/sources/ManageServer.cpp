@@ -14,7 +14,9 @@ void ManageServer::CheckUpdateSocket(const int32_t countSocketUpdate) {
             addNewClientSocket();
 
         }else {
-            processClientRequest(socketUpdate);
+            thread_pool.addNewTask([this, socketUpdate] {
+                processClientRequest(socketUpdate);
+            });
         }
     }
 }
@@ -36,8 +38,22 @@ void ManageServer::addNewClientSocket() const {
 
 }
 
+auto toFloat = [](const uint32_t networkVal) {
+    const uint32_t hostVal = ntohl(networkVal);
+    float result;
+    std::memcpy(&result, &hostVal, sizeof(float));
+    return result;
+};
+
+auto toInt = [](const uint32_t networkVal) {
+    const uint32_t hostVal = ntohl(networkVal);
+    int32_t result;
+    std::memcpy(&result, &hostVal, sizeof(int32_t));
+    return result;
+};
+
 void ManageServer::processClientRequest(const int32_t clientSocket)  {
-    std::vector<char> packet;
+    std::vector<std::byte> packet;
     ResultStatus status = socket_fd.receiveMessage(clientSocket, packet);
 
     if (status.isError()) {
@@ -47,79 +63,59 @@ void ManageServer::processClientRequest(const int32_t clientSocket)  {
     }
 
     if (packet.size() == 0) {
-       logger(ResultStatus::Error("Accept empty packet."));
+       logger(RES_ERROR("Accept empty packet."));
         return;
     }
 
     const auto packetType = static_cast<PacketType>(packet[0]);
 
+
     if (packetType == PacketType::VEC_FLOAT) {
 
-        const Vec4 answer = processVec(packet);
-        sendVectorFloat(clientSocket, answer);
+        const Vec4 answer = processVec(packet, toFloat);
+        sendVector(clientSocket, answer);
+
+    }else if (packetType == PacketType::VEC_INT) {
+
+        const Vec4 answer = processVec(packet, toInt);
+        sendVector(clientSocket, answer);
 
     }else if (packetType == PacketType::STRING) {
 
-        const int32_t sizeText = processString(packet);
-        sendInteger(clientSocket, sizeText);
+        const std::string text = processString(packet);
+        const Vec4 answer = textToIntVec(text);
+        sendVector(clientSocket, answer);
     }
 }
 
-Vec4 ManageServer::processVec(const std::vector<char> &packet) {
-    if (packet.size() < sizeof(PacketVector)) {
-        logger(ResultStatus::Error("Accept broken packet."));
-        return Vec4();
-    }
-
-    PacketVector packetVector{};
-    std::memcpy(&packetVector, packet.data(), sizeof(PacketVector));
-
-    auto toFloat = [](const uint32_t networkVal) {
-        const uint32_t hostVal = ntohl(networkVal);
-        float result;
-        std::memcpy(&result, &hostVal, sizeof(float));
-        return result;
-    };
-
-    Vec4 fromNetworkVec{};
-
-    fromNetworkVec.x = toFloat(packetVector.data.x);
-    fromNetworkVec.y = toFloat(packetVector.data.y);
-    fromNetworkVec.z = toFloat(packetVector.data.z);
-    fromNetworkVec.w = toFloat(packetVector.data.w);
-
-    const Vec4 answer = multiOnMatrix(fromNetworkVec);
-
-    return answer;
-}
-
-int32_t ManageServer::processString(const std::vector<char> &packet) {
+std::string ManageServer::processString(const std::vector<std::byte> &packet) {
     constexpr int32_t sizeHeader = sizeof(HeaderString);
 
     if (packet.size() < sizeHeader) {
-        logger(ResultStatus::Error("Accept broken packet."));
-        return 0;
+        logger(RES_ERROR("Accept broken packet."));
+        return "";
     }
 
-    const auto header = reinterpret_cast<const HeaderString &>(*packet.data());
+    HeaderString header;
+    std::memcpy(&header, packet.data(), sizeof(header));
+
     const int32_t sizeString = ntohl(header.size);
     if (packet.size() < (sizeHeader + sizeString)) {
-        logger(ResultStatus::Error("Text accepted not full."));
-        return 0;
+        logger(RES_ERROR("Text accepted not full."));
+        return "";
     }
 
-    const std::string text(packet.begin() + sizeHeader,
-        packet.begin() + sizeHeader + sizeString);
+    const std::string text(reinterpret_cast<const char*>(packet.data() + sizeHeader), sizeString);
 
-    return text.length();
+    return text;
 }
 
-void ManageServer::sendVectorFloat(const int32_t clientSocket, const Vec4 &vec) const {
+void ManageServer::sendVector(const int32_t clientSocket, const Vec4 &vec) const {
 
     PacketVector packet = createPacketVector(vec.x, vec.y, vec.z, vec.w);
 
     const ResultStatus res =  socket_fd.sendMessage(clientSocket,
-        reinterpret_cast<char*> (&packet), sizeof(packet));
+        reinterpret_cast<const char*> (&packet), sizeof(packet));
 
     if (res.isError()) {
         logger(res);

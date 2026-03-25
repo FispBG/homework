@@ -5,8 +5,8 @@
 #include "../includes/NetWork.h"
 #include "../../commonFunc/includes/functions.h"
 
-ResultStatus IpAddress::setIpAddress(const std::string &ipStr){
-    ResultStatus status = ResultStatus::Error("Input not valid ip (need 10.10.10.10:5435 format).");
+ResultStatus IpAddress::setAddress(const std::string &ipStr){
+    ResultStatus status = RES_ERROR("Input not valid ip (need 10.10.10.10:5435 format).");
 
     const std::vector<std::string> ipAndPort = split(ipStr, ':');
 
@@ -14,33 +14,28 @@ ResultStatus IpAddress::setIpAddress(const std::string &ipStr){
         return status;
     }
 
-    if (!(isIpAddress(ipAndPort[0]) && isPort(ipAndPort[1]))) {
+    if (!setIp(ipAndPort[0])) {
         return status;
     }
 
-    const std::vector<std::string> bytes = split(ipAndPort[0], '.');
-
-    for (uint8_t i = 0; i < bytes.size(); i++) {
-        ip[i] = strtol(bytes[i].c_str(), nullptr, 10);
+    if (!setPort(ipAndPort[1])) {
+        return status;
     }
-    port = strtol(ipAndPort[1].c_str(), nullptr, 10);
 
-    status = ResultStatus::Good();
-    ipInput = true;
-    return status;
+    return ResultStatus::Good();
 }
 
-ResultStatus IpAddress::setIpAddress(const std::vector<int64_t> &ipVectorInt) {
+ResultStatus IpAddress::setAddress(const std::vector<int64_t> &ipVectorInt) {
     ResultStatus status = ResultStatus::Good();
 
     if (ipVectorInt.size() != 5) {
-        status = ResultStatus::Error("Size vector != 5.");
+        status = RES_ERROR("Size vector != 5.");
         return status;
     }
 
     for (uint8_t i = 0; i < ipVectorInt.size() - 1; i++) {
         if (!(ipVectorInt[i] >= 0 && ipVectorInt[i] <= 255)) {
-            status = ResultStatus::Error(
+            status = RES_ERROR(
                 "One element in vector not in 0 <= byte <= 255. is: " +
                 std::to_string(ipVectorInt[i])
                 );
@@ -50,16 +45,17 @@ ResultStatus IpAddress::setIpAddress(const std::vector<int64_t> &ipVectorInt) {
     }
 
     if (ipVectorInt[4] < 0 || ipVectorInt[4] > 65535) {
-        status = ResultStatus::Error("Port invalid.");
+        status = RES_ERROR("Port invalid.");
         return status;
     }
     port = ipVectorInt[4];
 
     ipInput = true;
+    portInput = true;
     return status;
 }
 
-ResultStatus IpAddress::setIpAddress(const uint64_t hex) {
+ResultStatus IpAddress::setAddress(const uint64_t hex) {
     port = hex & 0xffff;
 
     const uint32_t ipVal = (hex >> 16) & 0xffffffff;
@@ -70,8 +66,36 @@ ResultStatus IpAddress::setIpAddress(const uint64_t hex) {
     }
 
     ipInput = true;
+    portInput = true;
     return ResultStatus::Good();
 }
+
+bool IpAddress::setIp(const std::string &inputIp) {
+    if (!isIpAddress(inputIp)) {
+        return false;
+    };
+
+    const std::vector<std::string> bytes = split(inputIp, '.');
+
+    for (uint8_t i = 0; i < bytes.size(); i++) {
+        ip[i] = strtol(bytes[i].c_str(), nullptr, 10);
+    }
+
+    ipInput = true;
+    return true;
+}
+
+bool IpAddress::setPort(const std::string &inputPort) {
+    if (!isPort(inputPort)) {
+        return false;
+    };
+
+    port = strtol(inputPort.c_str(), nullptr, 10);
+
+    portInput = true;
+    return true;
+}
+
 
 std::ostream& operator << (std::ostream& os, const IpAddress &netAddress) {
 
@@ -99,6 +123,10 @@ std::string IpAddress::getAddress() const {
 
 bool IpAddress::checkIpInput() const {
     return ipInput;
+}
+
+bool IpAddress::checkPortInput() const {
+    return portInput;
 }
 
 uint16_t IpAddress::getPort() const {

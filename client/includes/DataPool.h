@@ -42,7 +42,7 @@ bool DataPool<T, N>::insert(const T &vec) {
         tail = (tail + 1) % N;
         return true;
     }
-    logger(ResultStatus::Warning("Vector pool is full."));
+    logger(RES_WARNING("Vector pool is full."));
     return false;
 }
 template <typename T, uint64_t N>
@@ -52,7 +52,7 @@ T DataPool<T, N>::first() const{
         return vec;
     }
 
-    logger(ResultStatus::Warning("Vector pool is empty."));
+    logger(RES_WARNING("Vector pool is empty."));
     return T();
 }
 
@@ -62,7 +62,7 @@ T DataPool<T, N>::last() const {
         T vec = v_arr[(tail - 1 + N) % N];
         return vec;
     }
-    logger(ResultStatus::Warning("Vector pool is empty."));
+    logger(RES_WARNING("Vector pool is empty."));
     return T();
 }
 

@@ -35,7 +35,7 @@ void Menu::findItem(const uint64_t &hashCommand) {
     if (result != items.end()) {
         result->second->action();
     }else {
-        logger(ResultStatus::Warning("Command not found."));
+        logger(RES_WARNING("Command not found."));
     }
 
 }
@@ -75,7 +75,7 @@ bool CommandIpAddress::workWithIpString(const std::string &input, ResultStatus &
         return false;
     }
 
-    res = ipAddress.setIpAddress(input);
+    res = ipAddress.setAddress(input);
 
     return true;
 }
@@ -89,7 +89,7 @@ bool CommandIpAddress::workWithVecIntString(const std::string &input, ResultStat
         return false;
     }
 
-    res = ipAddress.setIpAddress(temp.intVec);
+    res = ipAddress.setAddress(temp.intVec);
     return true;
 }
 
@@ -99,7 +99,7 @@ bool CommandIpAddress::workWithHexString(const std::string &input, ResultStatus 
     }
 
     const uint64_t hex = hexStringToUint64_t(input);
-    res = ipAddress.setIpAddress(hex);
+    res = ipAddress.setAddress(hex);
     return true;
 }
 
@@ -116,8 +116,8 @@ void CommandIpAddress::action() {
             workWithHexString(input, res);
 
     if (!status) {
-        logger(ResultStatus::Error("Input incorrect address: " + input));
-        std::cout << "Press enter to continue: ";
+        logger(RES_ERROR("Input incorrect address: " + input));
+        std::cout << "Press any key to continue: ";
         getchar();
         return;
     }
@@ -125,8 +125,8 @@ void CommandIpAddress::action() {
     const std::vector<std::string> inputParams {ipAddress.getAddress()};
     ConnectionTest connection{inputParams};
     if (!connection.test()) {
-        logger(ResultStatus::Error("Cant connect to address: " + input));
-        std::cout << "Press enter to continue: ";
+        logger(RES_ERROR("Cant connect to address: " + input));
+        std::cout << "Press any key to continue: ";
         getchar();
         return;
     }

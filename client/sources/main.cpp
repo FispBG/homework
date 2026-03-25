@@ -10,11 +10,12 @@
 #include "../includes/Menu.h"
 #include "../includes/NetWork.h"
 
-#define VEC_SIZE 4
-#define POOL_SIZE 5
+constexpr size_t VEC_SIZE = 4;
+constexpr size_t POOL_SIZE = 5;
 
 int main(const int argc, const char **argv) {
-    AppSettings settings;
+    IpAddress ipConnect;
+    AppSettings settings(ipConnect);
 
     ResultStatus configCreate = settings.createConfig(argc, argv);
 
@@ -24,7 +25,6 @@ int main(const int argc, const char **argv) {
 
     DataPool<MyVec, POOL_SIZE> pool;
     Menu menu;
-    IpAddress ipConnect;
     std::string type = "string";
 
     menu.addItem("name", std::make_unique<CommandName>(settings));

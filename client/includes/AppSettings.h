@@ -5,12 +5,11 @@
 #pragma once
 
 #include "../../commonFunc/includes/functions.h"
+#include "./NetWork.h"
 #include <string>
 #include <stdint.h>
 
 struct AppConfig {
-    std::string address;
-    int32_t     port = -1;
     std::string role = "Client";
     uint64_t    id   = 0;
     std::string lib;
@@ -23,6 +22,7 @@ struct AppConfig {
 // lib только существующая
 // name не пустое
 class AppSettings {
+    IpAddress &network;
     AppConfig appConfig;
 
     ResultStatus processOnlyIp(const std::string &ip);
@@ -34,11 +34,12 @@ class AppSettings {
     bool processUserFlags(uint64_t flag, const std::string &argFlag);
     bool processAppFlags(uint64_t flag, const std::string &argFlag);
 
-    ResultStatus loopForIpnutArgs(int argc, const char *argv[]);
+    ResultStatus loopForInputArgs(int argc, const char *argv[]);
     ResultStatus processingFlag(uint64_t hashFlag, const std::string &flag, const std::string& argFlag);
     ResultStatus checkNeedFlag() const;
 
     public:
+    explicit AppSettings(IpAddress &settingNetwork) : network(settingNetwork) {};
 
     ResultStatus createConfig(int argc, const char *argv[]);
 

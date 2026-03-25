@@ -10,8 +10,9 @@
 #include <string>
 #include <thread>
 #include <sstream>
-#include "./StandardPackets.h"
 #include <arpa/inet.h>
+
+#include "StandardPackets.h"
 
 enum class Status {
     Good,
@@ -26,8 +27,6 @@ struct ResultStatus {
     int64_t line = 0;
     const char* file = "";
 
-    static ResultStatus Error(const std::string &msg);
-    static ResultStatus Warning(const std::string &msg);
     static ResultStatus Good();
 
     bool isWarning() const;
@@ -35,6 +34,9 @@ struct ResultStatus {
     bool isGood() const;
     bool isNone() const;
 };
+
+#define RES_ERROR(msg) ResultStatus{Status::Error, msg, __LINE__, __FILE__}
+#define RES_WARNING(msg) ResultStatus{Status::Warning, msg, __LINE__, __FILE__}
 
 void processInputType(std::string &type);
 ResultStatus processInputName(std::string &name);
@@ -75,7 +77,7 @@ ResultStatus fillVector(const std::string &str,
 
     while (std::getline(ss, elementString, ' ')) {
         if (count == vecSize) {
-            logger(ResultStatus::Warning("Size more, then vecSize."));
+            logger(RES_WARNING("Size more, then vecSize."));
             break;
         }
 
@@ -83,7 +85,7 @@ ResultStatus fillVector(const std::string &str,
         std::istringstream convertStream(elementString);
 
         if (!(convertStream >> elementTryConvert) || !convertStream.eof()) {
-            return ResultStatus::Error("Invalid element: " + elementString);
+            return RES_ERROR("Invalid element: " + elementString);
         }
 
         vecTemp.push_back(elementTryConvert);
@@ -91,11 +93,11 @@ ResultStatus fillVector(const std::string &str,
     }
 
     if (count < vecSize) {
-        return ResultStatus::Error("Need more argument input.");
+        return RES_ERROR("Need more argument input.");
     }
     if constexpr (std::is_arithmetic_v<T>) {
         if (vecTemp[3] == 0) {
-            return ResultStatus::Error("W-component invalid: 0.");
+            return RES_ERROR("W-component invalid: 0.");
         }
     }
 
@@ -124,11 +126,12 @@ constexpr inline uint64_t hashString(const char* str) {
 template <typename T, std::enable_if_t<std::is_floating_point_v<T>, bool> = true>
 PacketVector createPacketVector(T x, T y, T z, T w) {
     PacketVector packet{};
+    packet.type = PacketType::VEC_FLOAT;
 
     auto toNetwork = [](T value) {
         uint32_t bytes;
         std::memcpy(&bytes, &value, sizeof(uint32_t));
-        return ntohl(bytes);
+        return htonl(bytes);
     };
 
     packet.data.x = toNetwork(x);
@@ -141,10 +144,19 @@ PacketVector createPacketVector(T x, T y, T z, T w) {
 
 template <typename T, std::enable_if_t<std::is_integral_v<T>, bool> = true>
 PacketVector createPacketVector(T x, T y, T z, T w) {
-    return createPacketVector(
-        static_cast<float>(x),
-        static_cast<float>(y),
-        static_cast<float>(z),
-        static_cast<float>(w)
-    );
+    PacketVector packet{};
+    packet.type = PacketType::VEC_INT;
+
+    auto toNetwork = [](T value) {
+        uint32_t bytes;
+        std::memcpy(&bytes, &value, sizeof(uint32_t));
+        return htonl(bytes);
+    };
+
+    packet.data.x = toNetwork(x);
+    packet.data.y = toNetwork(y);
+    packet.data.z = toNetwork(z);
+    packet.data.w = toNetwork(w);
+
+    return packet;
 }

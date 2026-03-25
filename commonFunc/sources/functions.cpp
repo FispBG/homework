@@ -12,16 +12,6 @@ ResultStatus ResultStatus::Good() {
     return good;
 }
 
-ResultStatus ResultStatus::Error(const std::string &msg) {
-    ResultStatus err = {Status::Error, msg, __LINE__, __FILE__};
-    return err;
-}
-
-ResultStatus ResultStatus::Warning(const std::string &msg) {
-    ResultStatus warning = {Status::Warning, msg, __LINE__, __FILE__};
-    return warning;
-}
-
 bool ResultStatus::isError() const {
     return condition == Status::Error;
 }
@@ -199,7 +189,7 @@ ResultStatus fillVectors(std::vector<std::string> &stringVec,
             return fillVector(str, stringVec, vecSize);
 
         default:
-            return ResultStatus::Error("Unknown hash type.");
+            return RES_ERROR("Unknown hash type.");
     }
 }
 
@@ -211,7 +201,7 @@ void processInputType(std::string &type)  {
 
     inputStr = fixInputString(inputStr);
     if (inputStr != "string" && inputStr != "int" && inputStr != "float") {
-        logger(ResultStatus::Error("Invalid type: " + inputStr));
+        logger(RES_ERROR("Invalid type: " + inputStr));
         std::cout << "Press enter: ";
         getchar();
         return;
@@ -230,11 +220,6 @@ ResultStatus processInputVector(const std::string &type,
     std::getline(std::cin, inputStr);
     const ResultStatus res = fillVectors(stringVec, intVec, floatVec, type, inputStr, size);
 
-    // if (res.isError()) {
-    //     std::cout << "Press enter: ";
-    //     getchar();
-    // }
-
     return res;
 }
 
@@ -244,7 +229,7 @@ ResultStatus processInputName(std::string &name) {
     std::string inputStr;
     std::getline(std::cin, inputStr);
     if (inputStr.empty()) {
-        ResultStatus res = ResultStatus::Error("Input empty name.");
+        ResultStatus res = RES_ERROR("Input empty name.");
         logger(res);
         std::cout << "Press enter: ";
         getchar();
@@ -272,7 +257,7 @@ std::vector<std::string> split(const std::string &str, const char separator) {
 PacketString createPacketString(const std::string &str) {
     PacketString packet{};
 
-    const uint32_t len = static_cast<uint32_t>(str.length());
+    const uint32_t len = std::min(static_cast<uint32_t>(str.length()),static_cast<uint32_t> (255));
     packet.header.size = htonl(len);
 
     std::memcpy(packet.string, str.c_str(), len);

@@ -5,7 +5,6 @@
 #include "../includes/EpollServer.h"
 
 #include <unistd.h>
-#include <cstring>
 
 EpollServer::EpollServer(const int32_t server_fd, const uint32_t sizeClients) {
     ResultStatus status = createEpollFd();
@@ -24,7 +23,7 @@ int32_t EpollServer::getEventClient(const uint32_t index) const {
 ResultStatus EpollServer::createEpollFd() {
     epoll_fd = epoll_create1(0);
     if (epoll_fd < 0) {
-        return ResultStatus::Error("Epoll server dont create.");
+        return RES_ERROR("Epoll server dont create.");
     }
 
     return ResultStatus::Good();
@@ -35,7 +34,7 @@ ResultStatus EpollServer::settingEpollFd(const int32_t server_fd) {
     event_server.events = EPOLLIN;
 
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &event_server) < 0) {
-        return ResultStatus::Error("Epoll server dont add epoll fd.");
+        return RES_ERROR("Epoll server dont add epoll fd.");
     }
 
     return ResultStatus::Good();
@@ -47,15 +46,15 @@ EpollServer::~EpollServer() {
 
 ResultStatus EpollServer::addEpollFd(const int32_t clientSocket) const {
     if (epoll_fd < 0) {
-        return ResultStatus::Error("Epoll server dont create epoll fd.");
+        return RES_ERROR("Epoll server dont create epoll fd.");
     }
 
     epoll_event event{};
     event.data.fd = clientSocket;
-    event.events = EPOLLIN;
+    event.events = EPOLLIN | EPOLLONESHOT;
 
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, clientSocket, &event) < 0) {
-        return ResultStatus::Error("Epoll server dont add epoll fd.");
+        return RES_ERROR("Epoll server dont add epoll fd.");
     }
 
     return ResultStatus::Good();
@@ -64,10 +63,10 @@ ResultStatus EpollServer::addEpollFd(const int32_t clientSocket) const {
 
 ResultStatus EpollServer::closeEpollFd() {
     if (epoll_fd < 0) {
-        return ResultStatus::Error("Epoll server dont create.");
+        return RES_ERROR("Epoll server dont create.");
     }
     if (close(epoll_fd) < 0) {
-        return ResultStatus::Error("Epoll server dont close epoll fd.");
+        return RES_ERROR("Epoll server dont close epoll fd.");
     }
 
     epoll_fd = -1;
@@ -77,14 +76,14 @@ ResultStatus EpollServer::closeEpollFd() {
 
 int32_t EpollServer::waitEpollFd(const uint32_t size, ResultStatus &res) const {
     if (epoll_fd < 0) {
-        res = ResultStatus::Error("Epoll server dont create.");
+        res = RES_ERROR("Epoll server dont create.");
         return -1;
     }
 
     const int32_t count_user = epoll_wait(epoll_fd, event_client.get(), size, -1);
 
     if (count_user < 0) {
-        res = ResultStatus::Error("Epoll server dont wait epoll event.");
+        res = RES_ERROR("Epoll server dont wait epoll event.");
         return -1;
     }
 

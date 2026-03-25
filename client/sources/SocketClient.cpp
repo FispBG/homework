@@ -4,7 +4,6 @@
 
 #include "../includes/SocketClient.h"
 
-#include <cstring>
 #include <arpa/inet.h>
 
 bool SocketClient::clientIsRunning() const {
@@ -15,37 +14,11 @@ bool SocketClient::clientIsRunning() const {
     return true;
 }
 
-Vec4 SocketClient::receiveVectorFloat() {
-    PacketVector packetVector{};
-    Vec4 answer {0, 0, 0, 0};
-
-    if (!readSocket(packetVector, clientSocket)) {
-        logger(ResultStatus::Error("Server dont answer."));
-        return answer;
-    }
-
-    if (packetVector.type == PacketType::VEC_FLOAT) {
-        auto takeFloat = [](const uint32_t value) {
-            const uint32_t hostValue = ntohl(value);
-            float resultValue;
-            std::memcpy(&resultValue, &hostValue, sizeof(float));
-            return resultValue;
-        };
-
-        answer.x = takeFloat(packetVector.data.x);
-        answer.y = takeFloat(packetVector.data.y);
-        answer.z = takeFloat(packetVector.data.z);
-        answer.w = takeFloat(packetVector.data.w);
-    }
-
-    return answer;
-}
-
-int32_t SocketClient::receiveInt() {
+int32_t SocketClient::receiveSize() {
     uint32_t answer = 0;
 
     if (!readSocket(answer, clientSocket)) {
-        logger(ResultStatus::Error("Server dont answer."));
+        logger(RES_ERROR("Server dont answer."));
         return -1;
     }
 
@@ -56,7 +29,7 @@ ResultStatus SocketClient::createSocketClient() {
     clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
     if (clientSocket < 0) {
-        return ResultStatus::Error("Cannot create socket.");
+        return RES_ERROR("Cannot create socket.");
     }
 
     return ResultStatus::Good();
@@ -72,14 +45,14 @@ ResultStatus SocketClient::settingSocket(const std::string &ip, const uint16_t p
     if (connect(clientSocket, reinterpret_cast<sockaddr *>(&serverAddr), sizeof(serverAddr)) < 0) {
         close(clientSocket);
         clientSocket = -1;
-        return ResultStatus::Error("Cannot connect to server.");
+        return RES_ERROR("Cannot connect to server.");
     }
 
     constexpr timeval timeout{5, 0};
     if (setsockopt(clientSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
         close(clientSocket);
         clientSocket = -1;
-        return ResultStatus::Error("Cannot set socket timeout.");
+        return RES_ERROR("Cannot set socket timeout.");
     }
 
     return ResultStatus::Good();
@@ -105,4 +78,21 @@ SocketClient::~SocketClient() {
     if (clientSocket != -1) {
         close(clientSocket);
     }
+}
+
+bool SocketClient::sendSize(const uint32_t &size) {
+    if (clientSocket <= -1) {
+        return false;
+    }
+
+    const uint32_t networkValue = htonl(size);
+    const int32_t bytes = send(clientSocket, &networkValue, sizeof(networkValue), 0);
+
+    if (bytes < 0) {
+        close(clientSocket);
+        clientSocket = -1;
+        return false;
+    }
+
+    return true;
 }

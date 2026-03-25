@@ -10,21 +10,19 @@ void AppSettings::setName(const std::string &newName) {
 }
 
 ResultStatus AppSettings::processOnlyIp(const std::string &ip) {
-    if (isIpAddress(ip)) {
-         appConfig.address = ip;
+    if (network.setIp(ip)) {
         return ResultStatus::Good();
     }
 
-    return ResultStatus::Error("Invalid address: " + ip);
+    return RES_ERROR("Invalid address: " + ip);
 }
 
 ResultStatus AppSettings::processOnlyPort(const std::string &inputPort) {
-    if (isPort(inputPort)) {
-        appConfig.port = strtol(inputPort.c_str(), nullptr, 10);
+    if (network.setPort(inputPort)) {
         return ResultStatus::Good();
     }
 
-    return ResultStatus::Error("Invalid port(0-65535): " + inputPort);
+    return RES_ERROR("Invalid port(0-65535): " + inputPort);
 }
 
 ResultStatus AppSettings::processOnlyId(const std::string &inputId) {
@@ -32,7 +30,7 @@ ResultStatus AppSettings::processOnlyId(const std::string &inputId) {
     const uint64_t valueId = strtol(inputId.c_str(), &firstNotInt, 10);
 
     if (*firstNotInt != '\0') {
-        return ResultStatus::Error("Invalid id: " + inputId);
+        return RES_ERROR("Invalid id: " + inputId);
     }
 
     appConfig.id = valueId;
@@ -44,13 +42,13 @@ bool AppSettings::processNetworkFlags(const uint64_t flag, const std::string &ar
     switch (flag) {
         case hashString("-a"):
             if (!processOnlyIp(argFlag).isGood()) {
-                logger(ResultStatus::Error("Invalid IP address: " + argFlag));
+                logger(RES_ERROR("Invalid IP address: " + argFlag));
             }
             return true;
 
         case hashString("-p"):
             if (!processOnlyPort(argFlag).isGood()) {
-                logger(ResultStatus::Error("Invalid Port: " + argFlag));
+                logger(RES_ERROR("Invalid Port: " + argFlag));
             }
             return true;
 
@@ -68,7 +66,7 @@ bool AppSettings::processUserFlags(const uint64_t flag, const std::string &argFl
 
         case hashString("-i"):
             if (!processOnlyId(argFlag).isGood()) {
-                logger(ResultStatus::Error("Invalid ID: " + argFlag));
+                logger(RES_ERROR("Invalid ID: " + argFlag));
             }
             return true;
 
@@ -85,7 +83,7 @@ ResultStatus AppSettings::processOnlyLib(std::string &lib, const std::string &ar
         return ResultStatus::Good();
     }
 
-    return ResultStatus::Error("Lib not exists: " + argFlag);
+    return RES_ERROR("Lib not exists: " + argFlag);
 }
 
 bool AppSettings::processAppFlags(const uint64_t flag, const std::string &argFlag) {
@@ -93,7 +91,7 @@ bool AppSettings::processAppFlags(const uint64_t flag, const std::string &argFla
     switch (flag) {
         case hashString("-L"):
             if (!processOnlyLib(appConfig.lib, argFlag).isGood()) {
-                logger(ResultStatus::Error("Invalid lib: " + appConfig.lib));
+                logger(RES_ERROR("Invalid lib: " + appConfig.lib));
             }
             return true;
 
@@ -111,37 +109,36 @@ ResultStatus AppSettings::processingFlag(const uint64_t hashFlag, const std::str
                             processAppFlags(hashFlag, argFlag);
 
     if (!resultProcessing) {
-        return ResultStatus::Error("Invalid key: " + flag);
+        return RES_ERROR("Invalid key: " + flag);
     }
 
     return res;
 }
 
 ResultStatus AppSettings::checkNeedFlag() const {
-    const bool needFlag = !appConfig.address.empty() &&
-        appConfig.port != -1 &&
-        appConfig.id != -1;
+    const bool needFlag = network.checkIpInput() &&
+        network.checkPortInput();
 
     if (needFlag) {
         return ResultStatus::Good();
     }
 
-    return ResultStatus::Error("Haven't need flags.");
+    return RES_ERROR("Haven't need flags.");
 }
 
-ResultStatus AppSettings::loopForIpnutArgs(const int argc, const char *argv[]) {
+ResultStatus AppSettings::loopForInputArgs(const int argc, const char *argv[]) {
     for (int i = 1; i < argc; i++) {
         const uint64_t hashFlag = hashString(argv[i]);
         const std::string flag = argv[i];
 
         if (i+1 >= argc) {
-            return ResultStatus::Error("No argument for flag: " + flag);
+            return RES_ERROR("No argument for flag: " + flag);
         }
 
         const std::string argFlag = argv[++i];
 
         if (argFlag[0] == '-') {
-            return ResultStatus::Error("Invalid arg flag: " + argFlag);
+            return RES_ERROR("Invalid arg flag: " + argFlag);
         }
 
         const ResultStatus res = processingFlag(hashFlag, flag, argFlag);
@@ -157,7 +154,7 @@ ResultStatus AppSettings::loopForIpnutArgs(const int argc, const char *argv[]) {
 
 ResultStatus AppSettings::createConfig(const int argc, const char *argv[]) {
 
-    const ResultStatus statusLoop = loopForIpnutArgs(argc, argv);
+    const ResultStatus statusLoop = loopForInputArgs(argc, argv);
 
     if (statusLoop.isError()) {
         return statusLoop;

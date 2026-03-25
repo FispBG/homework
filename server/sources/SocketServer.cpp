@@ -13,7 +13,7 @@ ResultStatus SocketServer::createServer() {
     socket_my  = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
     if (socket_my < 0) {
-        return ResultStatus::Error("Socket creation failed.");
+        return RES_ERROR("Socket creation failed.");
     }
 
     return ResultStatus::Good();
@@ -25,7 +25,7 @@ ResultStatus SocketServer::settingServer(const uint16_t port) {
     addr.sin_port = htons(port);
 
     if (bind(socket_my,reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) < 0) {
-        return ResultStatus::Error("Bind failed.");
+        return RES_ERROR("Bind failed.");
     }
 
     return ResultStatus::Good();
@@ -33,11 +33,11 @@ ResultStatus SocketServer::settingServer(const uint16_t port) {
 
 ResultStatus SocketServer::startServer(const uint16_t countClient) const {
     if (socket_my < 0) {
-        return ResultStatus::Error("Socket not created.");
+        return RES_ERROR("Socket not created.");
     }
 
     if (listen(socket_my, countClient) < 0) {
-        return ResultStatus::Error("Listen failed.");
+        return RES_ERROR("Listen failed.");
     }
 
     return ResultStatus::Good();
@@ -70,7 +70,7 @@ int32_t SocketServer::getSocket() const {
 
 int32_t SocketServer::acceptSocket(ResultStatus &status) {
     if (socket_my < 0) {
-        status = ResultStatus::Error("Socket not created.");
+        status = RES_ERROR("Socket not created.");
         return -1;
     }
 
@@ -79,7 +79,7 @@ int32_t SocketServer::acceptSocket(ResultStatus &status) {
         &addrLength);
 
     if (clientSocket < 0) {
-        status = ResultStatus::Error("Accept failed.");
+        status = RES_ERROR("Accept failed.");
         return -1;
     }
 
@@ -96,35 +96,53 @@ ResultStatus SocketServer::setSocketNonBlock(int32_t clientSocket) const {
     const int flag = fcntl(clientSocket, F_GETFL);
 
     if (flag < 0) {
-        return ResultStatus::Error("Failed getting socket flag.");
+        return RES_ERROR("Failed getting socket flag.");
     }
 
     if (fcntl(clientSocket, F_SETFL, flag | O_NONBLOCK) < 0) {
-        return ResultStatus::Error("Failed setting socket flag.");
+        return RES_ERROR("Failed setting socket flag.");
     }
 
     return ResultStatus::Good();
 }
 
 
-ResultStatus SocketServer::receiveMessage(const int32_t clientSocket, std::vector<char> &message) {
+ResultStatus SocketServer::receiveMessage(const int32_t clientSocket, std::vector<std::byte> &message) {
     if (clientSocket < 0) {
-        return ResultStatus::Error("Socket client not created.");
+        return RES_ERROR("Socket client not created.");
     }
 
-    std::vector<char> messageRead(1024);
+    uint32_t bytesWait = 0;
+    const int32_t readWaitBytes = read(clientSocket, &bytesWait, sizeof(bytesWait));
 
-    const int32_t bytesRead = read(clientSocket, messageRead.data(), messageRead.size());
-
-    if (bytesRead < 0) {
-        return ResultStatus::Error("Read failed.");
+    if (readWaitBytes <= 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            message.clear();
+            return ResultStatus::Good();
+        }
+        return RES_ERROR("Failed to read size client socket.");
     }
 
-    if (bytesRead == 0) {
-        return ResultStatus::Error("Client closed.");
-    }
+    bytesWait = ntohl(bytesWait);
+    std::cout << "bytesWait: " << bytesWait << std::endl;
+    std::vector<std::byte> messageRead;
+    messageRead.resize(bytesWait);
 
-    messageRead.resize(bytesRead);
+    uint32_t bytesRead = 0;
+
+    while (bytesRead < bytesWait) {
+
+        const int32_t bytes = read(clientSocket, messageRead.data() + bytesRead, bytesWait - bytesRead);
+        std::cout << "bytes: " << bytes << std::endl;
+        if (bytes < 0) {
+            return RES_ERROR("Failed to read from client socket.");
+        }
+        if (bytes == 0) {
+            return RES_ERROR("Client closed.");
+        }
+
+        bytesRead += bytes;
+    }
 
     message = std::move(messageRead);
     return ResultStatus::Good();
@@ -132,7 +150,14 @@ ResultStatus SocketServer::receiveMessage(const int32_t clientSocket, std::vecto
 
 ResultStatus SocketServer::sendMessage(const int32_t clientSocket, const char *message, const uint32_t size) const {
     if (clientSocket < 0) {
-        return ResultStatus::Error("Socket not created.");
+        return RES_ERROR("Socket not created.");
+    }
+
+    const uint32_t sizeToSend = htonl(size);
+    const int32_t sendSize = send(clientSocket, &sizeToSend, sizeof(sizeToSend), 0);
+
+    if (sendSize < 0) {
+        return RES_ERROR("Send failed.");
     }
 
     int32_t bytesSent = 0;
@@ -140,8 +165,8 @@ ResultStatus SocketServer::sendMessage(const int32_t clientSocket, const char *m
     while (bytesSent < size) {
         const int32_t bytes = send(clientSocket, message + bytesSent, size - bytesSent, 0);
 
-        if (bytes < 0) {
-            return ResultStatus::Error("Send failed.");
+        if (bytes <= 0) {
+            return RES_ERROR("Send failed.");
         }
 
         bytesSent += bytes;
@@ -152,10 +177,10 @@ ResultStatus SocketServer::sendMessage(const int32_t clientSocket, const char *m
 
 ResultStatus SocketServer::closeSocket() {
     if (socket_my < 0) {
-        return ResultStatus::Error("Socket not created.");
+        return RES_ERROR("Socket not created.");
     }
     if (close(socket_my) < 0) {
-        return ResultStatus::Error("Close failed.");
+        return RES_ERROR("Close failed.");
     }
     socket_my = -1;
 

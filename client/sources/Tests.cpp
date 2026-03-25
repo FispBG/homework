@@ -9,7 +9,7 @@
 
 bool ConnectionTest::test() {
     std::cout << "Connection test" << std::endl;
-    if (params.size() <= 0) {
+    if (params.empty()) {
         std::cout << "No parameters" << std::endl;
         return false;
     }

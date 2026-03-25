@@ -26,7 +26,7 @@ public:
 
     ResultStatus setSocketNonBlock(int32_t clientSocket) const;
 
-    ResultStatus receiveMessage(int32_t clientSocket, std::vector<char> &message);
+    ResultStatus receiveMessage(int32_t clientSocket, std::vector<std::byte> &message);
     ResultStatus sendMessage(int32_t clientSocket, const char *message, uint32_t size) const;
     ResultStatus closeSocket();
     int32_t getSocket() const;

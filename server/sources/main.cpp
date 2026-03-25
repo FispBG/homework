@@ -1,22 +1,17 @@
 #include <iostream>
-#include <cstring>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/epoll.h>
 #include "../includes/SocketServer.h"
 #include "../includes/EpollServer.h"
 #include "../includes/ManageServer.h"
 
-#define PORT 8080
-#define COUNT_USER 5
+constexpr size_t PORT = 8080;
+constexpr size_t COUNT_USER = 4;
 
 int main(){
     auto server = SocketServer(PORT, COUNT_USER);
 
     auto epoll_server = EpollServer(server.getSocket(), COUNT_USER + 1);
 
-    auto manager = ManageServer(server, epoll_server);
+    auto manager = ManageServer(server, epoll_server, COUNT_USER);
 
     std::cout << "Server started" << std::endl;
 

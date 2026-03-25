@@ -3,24 +3,21 @@
 //
 
 #include "../includes/MathFunc.h"
+#include "../../commonFunc/includes/functions.h"
 
-Vec4 multiOnMatrix(const Vec4 inputVec) {
+Vec4 textToIntVec(const std::string &inputText) {
+    const std::vector<std::string> splitText = split(inputText, ' ');
 
-    constexpr float matrix[4][4] = {
-        {1, 2.2, 3, 4},
-        {5, 6, 7.9, 8},
-        {9, 1, 2, 3},
-        {4, 5.7, 6, 7}
-    };
-
-    const float vec[4] = {inputVec.x, inputVec.y, inputVec.z, inputVec.w};
-    float result[4] = {0, 0, 0, 0};
-
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            result[i] += matrix[i][j] * vec[j];
-        }
+    if (splitText.size() < 4) {
+        return Vec4();
     }
 
-    return Vec4{result[0], result[1], result[2], result[3]};
+    Vec4 intVec;
+
+    intVec.x = static_cast<uint32_t>(splitText[0].length());
+    intVec.y = static_cast<uint32_t>(splitText[1].length());
+    intVec.z = static_cast<uint32_t>(splitText[2].length());
+    intVec.w = static_cast<uint32_t>(splitText[3].length());
+
+    return intVec;
 }

@@ -67,15 +67,12 @@ ResultStatus CommandVectorInput<size>::processIntVec(const std::vector<int64_t> 
                 vec[0], vec[1], vec[2], vec[3]);
 
     if (!client.sendPacket(packetInt)) {
-        return ResultStatus::Error("Failed to send packet.");
+        return RES_ERROR("Failed to send packet.");
     }
 
-    const Vec4 answer = client.receiveVectorFloat();
+    const std::vector<int32_t> answer = client.receiveVector<int32_t>();
 
-    std::cout << static_cast<int32_t> (answer.x) << " "
-    << static_cast<int32_t> (answer.y) << " "
-    << static_cast<int32_t> (answer.z) << " "
-    << static_cast<int32_t> (answer.w) << std::endl;
+    std::cout << answer[0] << " " << answer[1] << " " << answer[2] << " " << answer[3] << std::endl;
 
     return ResultStatus::Good();
 }
@@ -87,12 +84,12 @@ ResultStatus CommandVectorInput<size>::processFloatVec(const std::vector<float> 
                 vec[0], vec[1], vec[2], vec[3]);
 
     if (!client.sendPacket(packetFloat)) {
-        return ResultStatus::Error("Failed to send packet.");
+        return RES_ERROR("Failed to send packet.");
     }
 
-    const Vec4 answer = client.receiveVectorFloat();
+    const std::vector<float> answer = client.receiveVector<float>();
 
-    std::cout << answer.x << " " << answer.y << " " << answer.z << " " << answer.w << std::endl;
+    std::cout << answer[0] << " " << answer[1] << " " << answer[2] << " " << answer[3] << std::endl;
 
     return ResultStatus::Good();
 }
@@ -101,15 +98,15 @@ template <uint64_t size>
 ResultStatus CommandVectorInput<size>::processStringVec(const std::vector<std::string> &vec, SocketClient &client) const {
 
     const PacketString packetStr = createPacketString(
-                vec[0] + vec[1] + vec[2] + vec[3]);
+                vec[0] + " " + vec[1] + " " + vec[2] + " " + vec[3]);
 
     if (!client.sendPacket(packetStr)) {
-        return ResultStatus::Error("Failed to send packet.");
+        return RES_ERROR("Failed to send packet.");
     }
 
-    const int32_t answer = client.receiveInt();
+    const std::vector<int32_t> answer = client.receiveVector<int32_t>();
 
-    std::cout << "Size string: " << answer << std::endl;
+    std::cout << answer[0] << " " << answer[1] << " " << answer[2] << " " << answer[3] << std::endl;
 
     return ResultStatus::Good();
 }
@@ -117,7 +114,7 @@ ResultStatus CommandVectorInput<size>::processStringVec(const std::vector<std::s
 template <uint64_t size>
 bool CommandVectorInput<size>::sendToServer(const MyVec &vec) const {
     if (!ipAddress.checkIpInput()) {
-        logger(ResultStatus::Warning("Input ip (select this command in menu)."));
+        logger(RES_WARNING("Input ip (select this command in menu)."));
         return false;
     }
 
@@ -142,7 +139,7 @@ bool CommandVectorInput<size>::sendToServer(const MyVec &vec) const {
             break;
 
         default:
-            status = ResultStatus::Error("Type error.");
+            status = RES_ERROR("Type error.");
     }
 
     logger(status);
@@ -165,15 +162,14 @@ void CommandVectorInput<size>::action() {
     logger(res);
 
     if (res.isError() || !pool.insert(vec)) {
-        std::cout << "Press enter to continue: ";
+        std::cout << "Press any key to continue: ";
         getchar();
         return;
     }
 
     sendToServer(vec);
-    std::cout << "Press enter to continue: ";
+    std::cout << "Press any key to continue: ";
     getchar();
-
 }
 
 // Инвариант - appSettings — валидная ссылка на объект
@@ -212,7 +208,7 @@ void CommandShow<size>::action() {
     std::cout << "-------------------" << std::endl;
     std::cout << "Your vector:" << std::endl;
     if (pool.empty()) {
-        logger(ResultStatus::Warning("No one vector input."));
+        logger(RES_WARNING("No one vector input."));
     }else {
         MyVec vec = pool.last();
         switch (hashString(vec.type.c_str())) {
@@ -235,7 +231,7 @@ void CommandShow<size>::action() {
     std::cout << "Your current type: " << type << std::endl;
     std::cout << "Your current ip: " << ipAddress << std::endl;
     std::cout << "-------------------" << std::endl;
-    std::cout << "Press enter to continue: ";
+    std::cout << "Press any key to continue: ";
     getchar();
 }
 
