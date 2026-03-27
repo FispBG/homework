@@ -11,15 +11,32 @@ FetchContent_Declare(googletest
 
 FetchContent_MakeAvailable(googletest)
 
-add_executable(${PROJECT_NAME} test_input.cpp
-        ../../commonFunc/sources/functions.cpp
+add_executable(${PROJECT_NAME}
+        AppSettingsTest.cpp
+        CheckAppTest.cpp
+        DataPoolTets.cpp
+        FunctionTest.cpp
+
         ../sources/AppSettings.cpp
         ../sources/Tests.cpp
         ../sources/SocketClient.cpp
+        ../sources/NetWork.cpp
+        ../../commonFunc/sources/ResultStatus.cpp
+        ../../commonFunc/sources/PacketFunction.cpp
+        ../../commonFunc/sources/StringFunction.cpp
+        ../../commonFunc/sources/ValidationFunction.cpp
+        ../../commonFunc/sources/VectorProcess.cpp
+
+        ../../commonFunc/includes/ResultStatus.h
+        ../../commonFunc/includes/PacketFunction.h
+        ../../commonFunc/includes/StringFunction.h
+        ../../commonFunc/includes/ValidationFunction.h
+        ../../commonFunc/includes/VectorProcess.h
+        ../../commonFunc/includes/StandardPackets.h
         ../includes/Tests.h
         ../includes/AppSettings.h
         ../includes/SocketClient.h
-        ../../commonFunc/includes/functions.h
+        ../includes/NetWork.h
 )
 
 target_link_libraries(${PROJECT_NAME} gtest_main gmock_main)

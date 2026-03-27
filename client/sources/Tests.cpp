@@ -3,8 +3,9 @@
 //
 
 #include "../includes/Tests.h"
-#include "../../commonFunc/includes/functions.h"
 #include "../includes/SocketClient.h"
+#include "../../commonFunc/includes/StringFunction.h"
+#include "../../commonFunc/includes/ValidationFunction.h"
 #include <filesystem>
 
 bool ConnectionTest::test() {

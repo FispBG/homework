@@ -1,12 +1,25 @@
 #include <iostream>
+
+#include "../includes/ConfigApp.h"
 #include "../includes/SocketServer.h"
 #include "../includes/EpollServer.h"
 #include "../includes/ManageServer.h"
+#include "../includes/ConfigApp.h"
 
-constexpr size_t PORT = 8080;
+size_t PORT = 8080;
 constexpr size_t COUNT_USER = 4;
 
-int main(){
+int main(const int argc, const char **argv){
+    ConfigApp configApp;
+
+    ResultStatus configCreate = configApp.create(argc, argv);
+
+    if (configCreate.isError()) {
+        exit(-1);
+    }
+
+    PORT = configApp.getConfig().port;
+
     auto server = SocketServer(PORT, COUNT_USER);
 
     auto epoll_server = EpollServer(server.getSocket(), COUNT_USER + 1);

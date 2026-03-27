@@ -9,10 +9,19 @@ add_executable(${PROJECT_NAME}
         sources/AppSettings.cpp
         sources/Tests.cpp
         sources/NetWork.cpp
+        sources/DataPool.cpp
         sources/SocketClient.cpp
-        ../commonFunc/sources/functions.cpp
-        ../commonFunc/includes/functions.h
+        ../../commonFunc/sources/ResultStatus.cpp
+        ../../commonFunc/sources/PacketFunction.cpp
+        ../../commonFunc/sources/StringFunction.cpp
+        ../../commonFunc/sources/ValidationFunction.cpp
+        ../../commonFunc/sources/VectorProcess.cpp
 
+        ../../commonFunc/includes/ResultStatus.h
+        ../../commonFunc/includes/PacketFunction.h
+        ../../commonFunc/includes/StringFunction.h
+        ../../commonFunc/includes/ValidationFunction.h
+        ../../commonFunc/includes/VectorProcess.h
         ../commonFunc/includes/StandardPackets.h
         includes/AppSettings.h
         includes/DataPool.h

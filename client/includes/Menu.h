@@ -7,9 +7,10 @@
 #include <unordered_map>
 #include <memory>
 
+#include "../../commonFunc/includes/PacketFunction.h"
+#include "../../commonFunc/includes/VectorProcess.h"
 #include "AppSettings.h"
 #include "DataPool.h"
-#include "../../commonFunc/includes/functions.h"
 #include "NetWork.h"
 #include "SocketClient.h"
 
@@ -48,7 +49,7 @@ class CommandVectorInput : public MenuItem {
     std::string &type;
     uint64_t vecSize;
 
-    bool sendToServer(const MyVec &vec) const;
+    bool sendToServer(MyVec &vec) const;
     ResultStatus processIntVec(const std::vector<int64_t> &vec, SocketClient &client) const;
     ResultStatus processFloatVec(const std::vector<float> &vec, SocketClient &client) const;
     ResultStatus processStringVec(const std::vector<std::string> &vec, SocketClient &client) const;
@@ -112,7 +113,7 @@ ResultStatus CommandVectorInput<size>::processStringVec(const std::vector<std::s
 }
 
 template <uint64_t size>
-bool CommandVectorInput<size>::sendToServer(const MyVec &vec) const {
+bool CommandVectorInput<size>::sendToServer(MyVec &vec) const {
     if (!ipAddress.checkIpInput()) {
         logger(RES_WARNING("Input ip (select this command in menu)."));
         return false;
@@ -125,17 +126,17 @@ bool CommandVectorInput<size>::sendToServer(const MyVec &vec) const {
     }
     ResultStatus status;
 
-    switch (hashString(vec.type.c_str())) {
+    switch (hashString(vec.getType().c_str())) {
         case hashString("int"):
-            status = processIntVec(vec.intVec, client);
+            status = processIntVec(vec.getIntVec(), client);
             break;
 
         case hashString("float"):
-            status = processFloatVec(vec.floatVec, client);
+            status = processFloatVec(vec.getFloatVec(), client);
             break;
 
         case hashString("string"):
-            status = processStringVec(vec.stringVec, client);
+            status = processStringVec(vec.getStringVec(), client);
             break;
 
         default:
@@ -153,15 +154,39 @@ bool CommandVectorInput<size>::sendToServer(const MyVec &vec) const {
 
 template <uint64_t size>
 void CommandVectorInput<size>::action() {
-    MyVec vec;
-    vec.type = type;
 
-    const ResultStatus res = processInputVector(vec.type, vec.stringVec,
-        vec.intVec, vec.floatVec, vecSize);
+    std::vector<std::string> tempStringVec;
+    std::vector<int64_t> tempIntVec;
+    std::vector<float> tempFloatVec;
+
+    const ResultStatus res = processInputVector(type, tempStringVec,
+        tempIntVec, tempFloatVec, vecSize);
 
     logger(res);
 
-    if (res.isError() || !pool.insert(vec)) {
+    if (res.isError()) {
+        std::cout << "Press any key to continue: ";
+        getchar();
+        return;
+    }
+
+    MyVec vec;
+
+    switch (hashString(type.c_str())) {
+        case hashString("int"):
+            vec = MyVec(std::move(tempIntVec));
+            break;
+        case hashString("float"):
+            vec = MyVec(std::move(tempFloatVec));
+            break;
+        case hashString("string"):
+            vec = MyVec(std::move(tempStringVec));
+            break;
+        default:
+            return;
+    }
+
+    if (!pool.insert(vec)) {
         std::cout << "Press any key to continue: ";
         getchar();
         return;
@@ -211,17 +236,17 @@ void CommandShow<size>::action() {
         logger(RES_WARNING("No one vector input."));
     }else {
         MyVec vec = pool.last();
-        switch (hashString(vec.type.c_str())) {
+        switch (hashString(vec.getType().c_str())) {
             case(hashString("int")):
-                printVector(vec.intVec, size, vec.type);
+                printVector(vec.getIntVec(), size, vec.getType());
                 break;
 
             case(hashString("float")):
-                printVector(vec.floatVec, size, vec.type);
+                printVector(vec.getFloatVec(), size, vec.getType());
                 break;
 
             case(hashString("string")):
-                printVector(vec.stringVec, size, vec.type);
+                printVector(vec.getStringVec(), size, vec.getType());
                 break;
 
             default:;

@@ -3,6 +3,7 @@
 //
 
 #include "../includes/ManageServer.h"
+#include "../../commonFunc/includes/PacketFunction.h"
 #include "../includes/MathFunc.h"
 #include <unistd.h>
 
@@ -57,7 +58,6 @@ void ManageServer::processClientRequest(const int32_t clientSocket)  {
     ResultStatus status = socket_fd.receiveMessage(clientSocket, packet);
 
     if (status.isError()) {
-        logger(status);
         close(clientSocket);
         return;
     }

@@ -6,9 +6,12 @@
 
 #include <unistd.h>
 #include <sys/socket.h>
+#include <vector>
+#include <cstring>
+#include <arpa/inet.h>
 
-#include "../../commonFunc/includes/functions.h"
 #include "../../commonFunc/includes/StandardPackets.h"
+#include "../../commonFunc/includes/ResultStatus.h"
 
 // Инвариант - clientSocket == -1 нет соединений
 // clientSocket >= 0 - соединение активно

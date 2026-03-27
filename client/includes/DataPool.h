@@ -4,14 +4,28 @@
 
 #pragma once
 
-#include "../../commonFunc/includes/functions.h"
+#include <vector>
+#include <array>
+#include "../../commonFunc/includes/ResultStatus.h"
 
 // Инвариант - type является одним из: int, float, string
-struct MyVec {
+class MyVec {
     std::string type;
     std::vector<std::string> stringVec;
     std::vector<int64_t> intVec;
     std::vector<float> floatVec;
+
+    public:
+    MyVec() : type("") {};
+    explicit MyVec(const std::vector<std::string> &vec) : type("string"), stringVec(std::move(vec)) {};
+    explicit MyVec(const std::vector<std::int64_t> &vec) : type("int"), intVec(std::move(vec)) {};
+    explicit MyVec(const std::vector<float> &vec) : type("float"), floatVec(std::move(vec)) {};
+
+    std::string getType() const;
+
+    std::vector<std::string>& getStringVec();
+    std::vector<int64_t>& getIntVec();
+    std::vector<float>& getFloatVec();
 };
 
 // Инвариант - countElem всегда в диапазоне [0, N]
@@ -20,9 +34,9 @@ struct MyVec {
 template <typename T, uint64_t N>
 class DataPool {
     std::array<T , N> v_arr;
-    uint32_t tail = 0;
-    uint32_t head = 0;
-    uint32_t countElem = 0;
+    size_t tail = 0;
+    size_t head = 0;
+    size_t countElem = 0;
 
     public:
     DataPool() = default;

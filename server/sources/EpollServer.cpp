@@ -3,7 +3,6 @@
 //
 
 #include "../includes/EpollServer.h"
-
 #include <unistd.h>
 
 EpollServer::EpollServer(const int32_t server_fd, const uint32_t sizeClients) {

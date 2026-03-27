@@ -9,8 +9,7 @@
 #include <vector>
 #include <iostream>
 #include <cstdint>
-
-struct ResultStatus;
+#include "../../commonFunc/includes/ResultStatus.h"
 
 // Инвариант - байты ip в диапазоне [0, 255]
 // port в диапазоне [0, 65535]

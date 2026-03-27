@@ -3,7 +3,8 @@
 //
 
 #include "../includes/NetWork.h"
-#include "../../commonFunc/includes/functions.h"
+#include "../../commonFunc/includes/StringFunction.h"
+#include "../../commonFunc/includes/ValidationFunction.h"
 
 ResultStatus IpAddress::setAddress(const std::string &ipStr){
     ResultStatus status = RES_ERROR("Input not valid ip (need 10.10.10.10:5435 format).");

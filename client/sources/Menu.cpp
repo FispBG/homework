@@ -4,6 +4,7 @@
 
 #include "../includes/Menu.h"
 #include "../includes/Tests.h"
+#include "../../commonFunc/includes/ValidationFunction.h"
 
 void CommandName::action() {
     std::string name;
@@ -81,15 +82,18 @@ bool CommandIpAddress::workWithIpString(const std::string &input, ResultStatus &
 }
 
 bool CommandIpAddress::workWithVecIntString(const std::string &input, ResultStatus &res) const {
-    MyVec temp;
-    fillVectors(temp.stringVec, temp.intVec,
-        temp.floatVec, "int", input, 5);
+    std::vector<std::string> tempStringVec;
+    std::vector<int64_t> tempIntVec;
+    std::vector<float> tempFloatVec;
 
-    if (temp.intVec.size() != 5) {
+    fillVectors(tempStringVec, tempIntVec,
+        tempFloatVec, "int", input, 5);
+
+    if (tempIntVec.size() != 5) {
         return false;
     }
 
-    res = ipAddress.setAddress(temp.intVec);
+    res = ipAddress.setAddress(tempIntVec);
     return true;
 }
 

@@ -2,10 +2,8 @@
 // Created by fisp on 15.03.2026.
 //
 //
-
-#include "stdint.h"
-
 #pragma once
+#include <cstdint>
 
 #pragma pack(push, 1)
 struct Vec4 {

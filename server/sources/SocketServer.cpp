@@ -124,7 +124,7 @@ ResultStatus SocketServer::receiveMessage(const int32_t clientSocket, std::vecto
     }
 
     bytesWait = ntohl(bytesWait);
-    std::cout << "bytesWait: " << bytesWait << std::endl;
+
     std::vector<std::byte> messageRead;
     messageRead.resize(bytesWait);
 
@@ -133,7 +133,6 @@ ResultStatus SocketServer::receiveMessage(const int32_t clientSocket, std::vecto
     while (bytesRead < bytesWait) {
 
         const int32_t bytes = read(clientSocket, messageRead.data() + bytesRead, bytesWait - bytesRead);
-        std::cout << "bytes: " << bytes << std::endl;
         if (bytes < 0) {
             return RES_ERROR("Failed to read from client socket.");
         }
@@ -172,6 +171,7 @@ ResultStatus SocketServer::sendMessage(const int32_t clientSocket, const char *m
         bytesSent += bytes;
     }
 
+    std::cout << "bytes sent to user: " << bytesSent << std::endl;
     return ResultStatus::Good();
 }
 

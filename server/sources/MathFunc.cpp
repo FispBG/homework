@@ -3,7 +3,7 @@
 //
 
 #include "../includes/MathFunc.h"
-#include "../../commonFunc/includes/functions.h"
+#include "../../commonFunc/includes/StringFunction.h"
 
 Vec4 textToIntVec(const std::string &inputText) {
     const std::vector<std::string> splitText = split(inputText, ' ');

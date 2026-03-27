@@ -5,14 +5,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 include(FetchContent)
 
-FetchContent_Declare(
-        json
-        GIT_REPOSITORY https://github.com/nlohmann/json.git
-        GIT_TAG v3.11.3
-)
-
-FetchContent_MakeAvailable(json)
-
 add_executable(${PROJECT_NAME}
         sources/main.cpp
         sources/SocketServer.cpp
@@ -20,21 +12,29 @@ add_executable(${PROJECT_NAME}
         sources/ManageServer.cpp
         sources/EpollServer.cpp
         sources/ThreadPool.cpp
-        ../commonFunc/sources/functions.cpp
+        sources/ConfigApp.cpp
+        ../../commonFunc/sources/ResultStatus.cpp
+        ../../commonFunc/sources/PacketFunction.cpp
+        ../../commonFunc/sources/StringFunction.cpp
+        ../../commonFunc/sources/ValidationFunction.cpp
+        ../../commonFunc/sources/VectorProcess.cpp
 
+        ../../commonFunc/includes/ResultStatus.h
+        ../../commonFunc/includes/PacketFunction.h
+        ../../commonFunc/includes/StringFunction.h
+        ../../commonFunc/includes/ValidationFunction.h
+        ../../commonFunc/includes/VectorProcess.h
         includes/SocketServer.h
         includes/EpollServer.h
         includes/ManageServer.h
         includes/MathFunc.h
         includes/ThreadPool.h
-        ../commonFunc/includes/functions.h
+        includes/ConfigApp.h
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/includes
         ${CMAKE_CURRENT_SOURCE_DIR}/../commonFunc/includes
 )
-
-target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json)
 
 include(cmake/cppcheck.cmake)

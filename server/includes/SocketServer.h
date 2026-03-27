@@ -7,7 +7,7 @@
 #include <vector>
 #include <netinet/in.h>
 #include <string>
-#include "../../commonFunc/includes/functions.h"
+#include "../../commonFunc/includes/ResultStatus.h"
 
 // Инвариант - socket_my == -1 сервер не создан
 // - socket_my >= 0 создан

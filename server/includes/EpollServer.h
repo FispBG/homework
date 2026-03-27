@@ -5,9 +5,8 @@
 #pragma once
 
 #include <sys/epoll.h>
-#include <cstdint>
 #include <memory>
-#include "../../commonFunc/includes/functions.h"
+#include "../../commonFunc/includes/ResultStatus.h"
 
 // Инвариант - epoll_fd == -1 epoll отсутствует
 // - epoll_fd >= 0 создан

@@ -7,7 +7,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <thread>
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 #include <functional>
 #include <queue>
